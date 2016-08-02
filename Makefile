@@ -25,13 +25,14 @@ CFLAGS += -O3
 endif
 
 # include directories
-INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES)
+INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc
 
 # general flags
-CFLAGS += -Wall -fPIC
+CFLAGS += $(INC) -Wall
 CFLAGS += -fno-builtin -ffunction-sections -fdata-sections
 # cpu related flags
-CFLAGS += $(INC) -mthumb -mcpu=$(CPU_CORE)
+CPU_FLAGS = -mthumb -mcpu=$(CPU_CORE)
+CFLAGS += $(CPU_FLAGS)
 # lpcopen required definitions
 CFLAGS += -DCORE_M0
 
@@ -39,12 +40,14 @@ CFLAGS += -DCORE_M0
 MAP_FILE = $(OUT_DIR)/$(PROJECT).map
 LINKER_FILE = $(SRC_DIR)/cpu/$(CPU_SERIES)/$(CPU).ld
 LDFLAGS += -nostdlib -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE) -Xlinker --gc-sections
+LDFLAGS += $(CPU_FLAGS) -specs=rdimon.specs
+LDFLAGS += -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group
 
 # libraries
 LIBS =
 
 # source and object files
-SRC = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/cpu/$(CPU_SERIES)/*.c)
+SRC = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/cpu/$(CPU_SERIES)/*.c) $(wildcard $(SRC_DIR)/cc/*.c)
 ASM = $(wildcard $(SRC_DIR)/cpu/$(CPU_SERIES)/*.s)
 OBJ = $(SRC:.c=.o) $(ASM:.s=.o)
 ELF = $(OUT_DIR)/$(PROJECT).elf
