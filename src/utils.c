@@ -116,18 +116,46 @@ string_t *string_create(const char *str)
     return obj;
 }
 
-uint8_t buffer_to_string(const uint8_t *buffer, string_t *str)
-{
-    str->size = buffer[0];
-    memcpy(str->text, &buffer[1], str->size);
-
-    return (str->size + 1);
-}
-
-uint8_t string_to_buffer(const string_t *str, uint8_t *buffer)
+uint8_t string_serialize(const string_t *str, uint8_t *buffer)
 {
     buffer[0] = str->size;
     memcpy(&buffer[1], str->text, str->size);
 
     return (str->size + 1);
+}
+
+string_t *string_deserialize(const uint8_t *data, uint32_t *written)
+{
+    string_t *str = malloc(sizeof(string_t));
+    *written = 0;
+
+    if (str)
+    {
+        str->size = *data++;
+        str->text = malloc(str->size + 1);
+        if (str->text)
+        {
+            memcpy(str->text, (char *) data, str->size);
+            str->text[str->size] = 0;
+            *written = str->size + 1;
+        }
+        else
+        {
+            free(str);
+            str = NULL;
+        }
+    }
+
+    return str;
+}
+
+void string_destroy(string_t *str)
+{
+    if (str)
+    {
+        if (str->text)
+            free(str->text);
+
+        free(str);
+    }
 }

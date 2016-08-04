@@ -78,7 +78,7 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         uint8_t *pdata = msg->data;
 
         // serialize label
-        pdata += string_to_buffer(desc->label, pdata);
+        pdata += string_serialize(desc->label, pdata);
 
         // serialize actuators data
         *pdata++ = desc->actuators_count;
