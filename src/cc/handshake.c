@@ -48,7 +48,14 @@
 ************************************************************************************************************************
 */
 
-uint16_t cc_handshake(void)
+cc_handshake_t *cc_handshake(void)
 {
-    return 0xFF00;
+    static cc_handshake_t handshake;
+
+    handshake.random_id = 0xABCD;
+    handshake.protocol.major = 0;
+    handshake.protocol.minor = 0;
+    handshake.protocol.micro = 0;
+
+    return &handshake;
 }

@@ -5,6 +5,7 @@
 */
 
 #include "msg.h"
+#include "handshake.h"
 #include "device.h"
 
 
@@ -53,9 +54,11 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
 {
     if (msg->command == CC_CMD_HANDSHAKE)
     {
-        uint8_t *pdata = data_struct;
-        *pdata++ = msg->data[1];
-        *pdata++ = msg->data[0];
+        cc_handshake_t *handshake = data_struct;
+        handshake->random_id = *((uint16_t *) &msg->data[0]);
+        handshake->protocol.major = msg->data[2];
+        handshake->protocol.minor = msg->data[3];
+        handshake->protocol.micro = 0;
     }
 
     return 0;
@@ -67,10 +70,13 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
 
     if (command == CC_CMD_HANDSHAKE)
     {
-        const uint8_t *pdata = data_struct;
-        msg->data_size = 2;
-        msg->data[1] = *pdata++;
-        msg->data[0] = *pdata++;
+        const cc_handshake_t *handshake = data_struct;
+        uint16_t *random_id = (uint16_t *) &msg->data[0];
+        *random_id = handshake->random_id;
+        msg->data[2] = handshake->protocol.major;
+        msg->data[3] = handshake->protocol.minor;
+
+        msg->data_size = 4;
     }
     else if (command == CC_CMD_DEV_DESCRIPTOR)
     {

@@ -36,6 +36,10 @@ typedef struct string_t {
     char *text;
 } string_t;
 
+typedef struct version_t {
+    uint8_t major, minor, micro;
+} version_t;
+
 
 /*
 ************************************************************************************************************************

@@ -47,7 +47,7 @@ typedef struct cc_handle_t {
     cc_msg_t *msg;
     uint8_t address;
     uint8_t *tx_buffer;
-    uint16_t random_id;
+    cc_handshake_t *handshake;
 } cc_handle_t;
 
 
@@ -109,10 +109,10 @@ static void parser(cc_handle_t *handle)
     {
         if (msg->command == CC_CMD_CHAIN_SYNC)
         {
-            handle->random_id = cc_handshake();
+            handle->handshake = cc_handshake();
 
             // build and send handshake message
-            cc_msg_builder(CC_CMD_HANDSHAKE, &handle->random_id, msg);
+            cc_msg_builder(CC_CMD_HANDSHAKE, handle->handshake, msg);
             send(handle, msg);
 
             handle->comm_state++;
@@ -122,12 +122,13 @@ static void parser(cc_handle_t *handle)
     {
         if (msg->command == CC_CMD_HANDSHAKE)
         {
-            uint16_t random_id;
-            cc_msg_parser(msg, &random_id);
+            cc_handshake_t handshake;
+            cc_msg_parser(msg, &handshake);
 
             // check whether master replied to this device
-            if (handle->random_id == random_id)
+            if (handle->handshake->random_id == handshake.random_id)
             {
+                // TODO: check protocol version
                 handle->address = msg->dev_address;
                 handle->comm_state++;
             }
