@@ -51,8 +51,9 @@ typedef struct string_t {
 */
 uint8_t crc8(const uint8_t *data, uint32_t len);
 
-string_t *string_create(const uint8_t *data, uint32_t *written);
-void string_destroy(string_t *str);
+string_t *string_create(const char *str);
+uint8_t buffer_to_string(const uint8_t *buffer, string_t *str);
+uint8_t string_to_buffer(const string_t *str, uint8_t *buffer);
 
 
 /*
