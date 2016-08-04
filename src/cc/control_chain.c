@@ -7,6 +7,9 @@
 #include <stdint.h>
 #include "serial.h"
 #include "utils.h"
+#include "msg.h"
+#include "handshake.h"
+#include "device.h"
 
 
 /*
@@ -28,8 +31,8 @@
 ************************************************************************************************************************
 */
 
-enum cc_cmd_t {CC_CMD_CHAIN_SYNC, CC_CMD_HANDSHAKE, CC_CMD_DEV_DESCRIPTOR, CC_CMD_ASSIGNMENT, CC_CMD_DATA_UPDATE,
-               CC_CMD_UNASSIGNMENT};
+// communication states
+enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQUESTS};
 
 
 /*
@@ -38,18 +41,13 @@ enum cc_cmd_t {CC_CMD_CHAIN_SYNC, CC_CMD_HANDSHAKE, CC_CMD_DEV_DESCRIPTOR, CC_CM
 ************************************************************************************************************************
 */
 
-typedef struct cc_msg_t {
-    uint8_t *header;
-    uint8_t state, command;
-    uint16_t data_size;
-    uint8_t *data, data_idx;
-} cc_msg_t;
-
 typedef struct cc_handle_t {
+    int comm_state, msg_state;
     serial_t *serial;
     cc_msg_t *msg;
     uint8_t address;
     uint8_t *tx_buffer;
+    uint16_t random_id;
 } cc_handle_t;
 
 
@@ -107,26 +105,51 @@ static void parser(cc_handle_t *handle)
 {
     cc_msg_t *msg = handle->msg;
 
-    switch (msg->command)
+    if (handle->comm_state == WAITING_SYNCING)
     {
-        case CC_CMD_CHAIN_SYNC:
-            Chip_GPIO_SetPinState(LPC_GPIO, 1, 23, 0);
-            break;
+        if (msg->command == CC_CMD_CHAIN_SYNC)
+        {
+            handle->random_id = cc_handshake();
 
-        case CC_CMD_HANDSHAKE:
-            break;
+            // build and send handshake message
+            cc_msg_builder(CC_CMD_HANDSHAKE, &handle->random_id, msg);
+            send(handle, msg);
 
-        case CC_CMD_DEV_DESCRIPTOR:
-            break;
+            handle->comm_state++;
+        }
+    }
+    else if (handle->comm_state == WAITING_HANDSHAKE)
+    {
+        if (msg->command == CC_CMD_HANDSHAKE)
+        {
+            uint16_t random_id;
+            cc_msg_parser(msg, &random_id);
 
-        case CC_CMD_ASSIGNMENT:
-            break;
+            // check whether master replied to this device
+            if (handle->random_id == random_id)
+            {
+                handle->address = msg->dev_address;
+                handle->comm_state++;
+            }
+        }
+    }
+    else if (handle->comm_state == WAITING_DEV_DESCRIPTOR)
+    {
+        if (msg->command == CC_CMD_DEV_DESCRIPTOR)
+        {
+            cc_dev_descriptor_t *desc;
+            desc = cc_device_descriptor();
 
-        case CC_CMD_DATA_UPDATE:
-            break;
+            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, desc, msg);
+            send(handle, msg);
 
-        case CC_CMD_UNASSIGNMENT:
-            break;
+            // device assumes message was successfully delivered
+            handle->comm_state++;
+        }
+    }
+    else if (handle->comm_state == LISTENING_REQUESTS)
+    {
+Chip_GPIO_SetPinState(LPC_GPIO, 0, 14, 0);
     }
 }
 
@@ -144,10 +167,10 @@ static void serial_recv(void *arg)
         uint16_t data_size;
 
         // store header bytes
-        if (msg->state > 0 && msg->state <= HEADER_SIZE)
-            msg->header[msg->state - 1] = byte;
+        if (handle->msg_state > 0 && handle->msg_state <= HEADER_SIZE)
+            msg->header[handle->msg_state - 1] = byte;
 
-        switch (msg->state)
+        switch (handle->msg_state)
         {
             // sync
             case 0:
@@ -155,28 +178,35 @@ static void serial_recv(void *arg)
                 {
                     msg->data_idx = 0;
                     msg->data_size = 0;
-                    msg->state++;
+                    handle->msg_state++;
                 }
                 break;
 
             // address
             case 1:
-                if (byte == BROADCAST_ADDRESS || byte == handle->address)
-                    msg->state++;
+                if (byte == BROADCAST_ADDRESS ||
+                    byte == handle->address   ||
+                    handle->address == BROADCAST_ADDRESS)
+                {
+                    msg->dev_address = byte;
+                    handle->msg_state++;
+                }
                 else
-                    msg->state = 0;
+                {
+                    handle->msg_state = 0;
+                }
                 break;
 
             // command
             case 2:
                 msg->command = byte;
-                msg->state++;
+                handle->msg_state++;
                 break;
 
             // data size LSB
             case 3:
                 msg->data_size = byte;
-                msg->state++;
+                handle->msg_state++;
                 break;
 
             // data size MSB
@@ -189,15 +219,15 @@ static void serial_recv(void *arg)
                 // sync message must have no data
                 if (msg->command == CC_CMD_CHAIN_SYNC && data_size > 0)
                 {
-                    msg->state = 0;
+                    handle->msg_state = 0;
                 }
                 else
                 {
-                    msg->state++;
+                    handle->msg_state++;
 
                     // if no data is expected skip data retrieving step
                     if (data_size == 0)
-                        msg->state++;
+                        handle->msg_state++;
                 }
                 break;
 
@@ -205,7 +235,7 @@ static void serial_recv(void *arg)
             case 5:
                 msg->data[msg->data_idx++] = byte;
                 if (msg->data_idx == msg->data_size)
-                    msg->state++;
+                    handle->msg_state++;
                 break;
 
             // crc
@@ -213,7 +243,7 @@ static void serial_recv(void *arg)
                 if (crc8(msg->header, HEADER_SIZE + msg->data_size) == byte)
                     parser(handle);
 
-                msg->state = 0;
+                handle->msg_state = 0;
                 break;
         }
     }
