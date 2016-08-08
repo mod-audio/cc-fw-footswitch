@@ -34,6 +34,8 @@
 ************************************************************************************************************************
 */
 
+static cc_actuator_t *g_actuators[4], actuator1;
+
 
 /*
 ************************************************************************************************************************
@@ -53,14 +55,19 @@ cc_dev_descriptor_t *cc_device_descriptor(void)
     static string_t *label;
     label = string_create("FootEx");
 
-    static cc_actuator_t *actuators[4], actuator1;
-    actuators[0] = &actuator1;
+    g_actuators[0] = &actuator1;
     actuator1.id = 0;
 
     static cc_dev_descriptor_t dev_descriptor;
     dev_descriptor.label = label;
     dev_descriptor.actuators_count = 1;
-    dev_descriptor.actuators = actuators;
+    dev_descriptor.actuators = g_actuators;
 
     return &dev_descriptor;
+}
+
+void cc_actuator_map(cc_assignment_t *assignment)
+{
+    int id = assignment->actuator_id;
+    g_actuators[id]->assignment = assignment;
 }

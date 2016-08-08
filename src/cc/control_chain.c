@@ -10,6 +10,7 @@
 #include "msg.h"
 #include "handshake.h"
 #include "device.h"
+#include "chip.h"
 
 
 /*
@@ -100,7 +101,7 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
     sdata.size = i;
     serial_send(handle->serial, &sdata);
 }
-#include "chip.h"
+
 static void parser(cc_handle_t *handle)
 {
     cc_msg_t *msg = handle->msg;
@@ -150,7 +151,23 @@ static void parser(cc_handle_t *handle)
     }
     else if (handle->comm_state == LISTENING_REQUESTS)
     {
+        if (msg->command == CC_CMD_CHAIN_SYNC)
+        {
+        }
+        else if (msg->command == CC_CMD_ASSIGNMENT)
+        {
 Chip_GPIO_SetPinState(LPC_GPIO, 0, 14, 0);
+            cc_assignment_t assignment;
+            cc_msg_parser(msg, &assignment);
+            cc_assignment_add(&assignment);
+
+            cc_msg_builder(CC_CMD_ASSIGNMENT, NULL, msg);
+            send(handle, msg);
+        }
+        else if (msg->command == CC_CMD_UNASSIGNMENT)
+        {
+        }
+
     }
 }
 

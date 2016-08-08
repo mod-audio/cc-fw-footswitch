@@ -1,5 +1,5 @@
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef ASSIGNMENT_H
+#define ASSIGNMENT_H
 
 
 /*
@@ -9,8 +9,7 @@
 */
 
 #include <stdint.h>
-#include "assignment.h"
-#include "utils.h"
+#include "node.h"
 
 
 /*
@@ -33,16 +32,12 @@
 ************************************************************************************************************************
 */
 
-typedef struct cc_actuator_t {
-    uint8_t id;
-    cc_assignment_t *assignment;
-} cc_actuator_t;
+typedef node_t* cc_assignments_t;
 
-typedef struct cc_dev_descriptor_t {
-    string_t *label;
-    uint8_t actuators_count;
-    cc_actuator_t **actuators;
-} cc_dev_descriptor_t;
+typedef struct cc_assignment_t {
+    int id;
+    int actuator_id;
+} cc_assignment_t;
 
 
 /*
@@ -51,9 +46,9 @@ typedef struct cc_dev_descriptor_t {
 ************************************************************************************************************************
 */
 
-cc_dev_descriptor_t *cc_device_descriptor(void);
-
-void cc_actuator_map(cc_assignment_t *assignment);
+void cc_assignment_add(cc_assignment_t *assignment);
+void cc_assignment_remove(int assignment_id);
+cc_assignments_t cc_assignments(void);
 
 
 /*

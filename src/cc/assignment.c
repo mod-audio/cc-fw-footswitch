@@ -4,8 +4,7 @@
 ************************************************************************************************************************
 */
 
-#include "msg.h"
-#include "handshake.h"
+#include "assignment.h"
 #include "device.h"
 
 
@@ -36,6 +35,8 @@
 ************************************************************************************************************************
 */
 
+static cc_assignments_t g_assignments;
+
 
 /*
 ************************************************************************************************************************
@@ -50,67 +51,30 @@
 ************************************************************************************************************************
 */
 
-int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
+void cc_assignment_add(cc_assignment_t *assignment)
 {
-    if (msg->command == CC_CMD_HANDSHAKE)
-    {
-        cc_handshake_t *handshake = data_struct;
-        handshake->random_id = *((uint16_t *) &msg->data[0]);
-        handshake->protocol.major = msg->data[2];
-        handshake->protocol.minor = msg->data[3];
-        handshake->protocol.micro = 0;
-    }
-    else if (msg->command == CC_CMD_ASSIGNMENT)
-    {
-        cc_assignment_t *assignment = data_struct;
-        assignment->actuator_id = msg->data[0];
-    }
+    if (!g_assignments)
+        g_assignments = node_create(0);
 
-    return 0;
+    cc_actuator_map(assignment);
+    node_child(g_assignments, assignment);
 }
 
-int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
+void cc_assignment_remove(int assignment_id)
 {
-    msg->command = command;
-
-    if (command == CC_CMD_HANDSHAKE)
+    node_t *node;
+    for (node = g_assignments->first; node; node = node->next)
     {
-        const cc_handshake_t *handshake = data_struct;
-        uint16_t *random_id = (uint16_t *) &msg->data[0];
-        *random_id = handshake->random_id;
-        msg->data[2] = handshake->protocol.major;
-        msg->data[3] = handshake->protocol.minor;
-
-        msg->data_size = 4;
-    }
-    else if (command == CC_CMD_DEV_DESCRIPTOR)
-    {
-        const cc_dev_descriptor_t *desc = data_struct;
-        uint8_t *pdata = msg->data;
-
-        // serialize label
-        pdata += string_serialize(desc->label, pdata);
-
-        // serialize actuators data
-        *pdata++ = desc->actuators_count;
-        for (int i = 0; i < desc->actuators_count; i++)
+        cc_assignment_t *assignment = node->data;
+        if (assignment_id == assignment->id)
         {
-            *pdata++ = desc->actuators[i]->id;
+            node_cut(node);
+            break;
         }
+    }
+}
 
-        msg->data_size = (pdata - msg->data);
-    }
-    else if (msg->command == CC_CMD_ASSIGNMENT)
-    {
-        msg->data_size = 0;
-    }
-    else if (command == CC_CMD_DATA_UPDATE)
-    {
-    }
-    else
-    {
-        return -1;
-    }
-
-    return 0;
+cc_assignments_t cc_assignments(void)
+{
+    return g_assignments;
 }
