@@ -15,6 +15,9 @@
 ************************************************************************************************************************
 */
 
+#define MAX_INSTANCES       2
+#define DATA_BUFFER_SIZE    128
+
 
 /*
 ************************************************************************************************************************
@@ -28,6 +31,12 @@
 *       INTERNAL DATA TYPES
 ************************************************************************************************************************
 */
+
+struct cc_msg_manager_t {
+    int count;
+    cc_msg_t instances[MAX_INSTANCES];
+    uint8_t buffers[MAX_INSTANCES][DATA_BUFFER_SIZE];
+} g_msg_man;
 
 
 /*
@@ -49,6 +58,18 @@
 *       GLOBAL FUNCTIONS
 ************************************************************************************************************************
 */
+
+cc_msg_t *cc_msg_new(void)
+{
+    cc_msg_t *msg;
+
+    int i = g_msg_man.count++;
+    msg = &g_msg_man.instances[i];
+    msg->header = g_msg_man.buffers[i];
+    msg->data = &msg->header[CC_MSG_HEADER_SIZE];
+
+    return msg;
+}
 
 int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
 {

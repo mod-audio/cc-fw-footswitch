@@ -21,9 +21,7 @@
 
 #define BAUD_RATE           115200
 #define SYNC_BYTE           0xA7
-#define HEADER_SIZE         4
 #define BROADCAST_ADDRESS   0
-#define DATA_BUFFER_SIZE    128
 
 
 /*
@@ -45,9 +43,8 @@ enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQU
 typedef struct cc_handle_t {
     int comm_state, msg_state;
     serial_t *serial;
-    cc_msg_t *msg;
+    cc_msg_t *msg_rx, *msg_tx;
     uint8_t address;
-    uint8_t *tx_buffer;
     cc_handshake_t *handshake;
 } cc_handle_t;
 
@@ -59,9 +56,6 @@ typedef struct cc_handle_t {
 */
 
 static cc_handle_t g_cc_handle;
-static cc_msg_t g_cc_msg;
-static uint8_t g_msg_buffer[DATA_BUFFER_SIZE];
-static uint8_t g_tx_buffer[DATA_BUFFER_SIZE];
 
 
 /*
@@ -99,11 +93,10 @@ static void timer_set(int frame)
 
 static void send(cc_handle_t *handle, const cc_msg_t *msg)
 {
-    uint32_t i = 0;
-    uint8_t *buffer = handle->tx_buffer;
+    uint8_t *buffer = handle->msg_tx->header;
 
-    // sync byte and header
-    buffer[i++] = SYNC_BYTE;
+    // header
+    uint32_t i = 0;
     buffer[i++] = handle->address;
     buffer[i++] = msg->command;
     buffer[i++] = (msg->data_size >> 0) & 0xFF;
@@ -112,18 +105,28 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
     // data
     if (msg->data_size > 0)
     {
-        uint32_t j = 0;
-        for (j = 0; j < msg->data_size; j++)
+        if (msg != handle->msg_tx)
         {
-            buffer[i++] = msg->data[j];
+            for (uint32_t j = 0; j < msg->data_size; j++)
+                buffer[i++] = msg->data[j];
+        }
+        else
+        {
+            i += msg->data_size;
         }
     }
 
-    // calculate crc skipping sync byte
-    buffer[i++] = crc8(&buffer[1], HEADER_SIZE + msg->data_size);
+    // calculate crc
+    buffer[i++] = crc8(buffer, CC_MSG_HEADER_SIZE + msg->data_size);
+
+    // send sync byte
+    uint8_t sync = SYNC_BYTE;
+    serial_data_t sdata;
+    sdata.data = &sync;
+    sdata.size = 1;
+    serial_send(handle->serial, &sdata);
 
     // send message
-    serial_data_t sdata;
     sdata.data = buffer;
     sdata.size = i;
     serial_send(handle->serial, &sdata);
@@ -131,46 +134,46 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
 
 static void parser(cc_handle_t *handle)
 {
-    cc_msg_t *msg = handle->msg;
+    cc_msg_t *msg_rx = handle->msg_rx;
 
     if (handle->comm_state == WAITING_SYNCING)
     {
-        if (msg->command == CC_CMD_CHAIN_SYNC)
+        if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
             handle->handshake = cc_handshake();
 
             // build and send handshake message
-            cc_msg_builder(CC_CMD_HANDSHAKE, handle->handshake, msg);
-            send(handle, msg);
+            cc_msg_builder(CC_CMD_HANDSHAKE, handle->handshake, handle->msg_tx);
+            send(handle, handle->msg_tx);
 
             handle->comm_state++;
         }
     }
     else if (handle->comm_state == WAITING_HANDSHAKE)
     {
-        if (msg->command == CC_CMD_HANDSHAKE)
+        if (msg_rx->command == CC_CMD_HANDSHAKE)
         {
             cc_handshake_t handshake;
-            cc_msg_parser(msg, &handshake);
+            cc_msg_parser(msg_rx, &handshake);
 
             // check whether master replied to this device
             if (handle->handshake->random_id == handshake.random_id)
             {
                 // TODO: check protocol version
-                handle->address = msg->dev_address;
+                handle->address = msg_rx->dev_address;
                 handle->comm_state++;
             }
         }
     }
     else if (handle->comm_state == WAITING_DEV_DESCRIPTOR)
     {
-        if (msg->command == CC_CMD_DEV_DESCRIPTOR)
+        if (msg_rx->command == CC_CMD_DEV_DESCRIPTOR)
         {
             cc_dev_descriptor_t *desc;
             desc = cc_device_descriptor();
 
-            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, desc, msg);
-            send(handle, msg);
+            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, desc, handle->msg_tx);
+            send(handle, handle->msg_tx);
 
             // device assumes message was successfully delivered
             handle->comm_state++;
@@ -178,23 +181,23 @@ static void parser(cc_handle_t *handle)
     }
     else if (handle->comm_state == LISTENING_REQUESTS)
     {
-        if (msg->command == CC_CMD_CHAIN_SYNC)
+        if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
             // device address is used to define the communication frame
             // timer is reseted each sync message
             timer_set(handle->address);
         }
-        else if (msg->command == CC_CMD_ASSIGNMENT)
+        else if (msg_rx->command == CC_CMD_ASSIGNMENT)
         {
 Chip_GPIO_SetPinState(LPC_GPIO, 0, 14, 0);
             cc_assignment_t assignment;
-            cc_msg_parser(msg, &assignment);
+            cc_msg_parser(msg_rx, &assignment);
             cc_assignment_add(&assignment);
 
-            cc_msg_builder(CC_CMD_ASSIGNMENT, NULL, msg);
-            send(handle, msg);
+            cc_msg_builder(CC_CMD_ASSIGNMENT, NULL, handle->msg_tx);
+            send(handle, handle->msg_tx);
         }
-        else if (msg->command == CC_CMD_UNASSIGNMENT)
+        else if (msg_rx->command == CC_CMD_UNASSIGNMENT)
         {
         }
     }
@@ -206,7 +209,7 @@ static void serial_recv(void *arg)
     uint16_t count = 0;
 
     cc_handle_t *handle = &g_cc_handle;
-    cc_msg_t *msg = handle->msg;
+    cc_msg_t *msg = handle->msg_rx;
 
     while (serial->size--)
     {
@@ -214,7 +217,7 @@ static void serial_recv(void *arg)
         uint16_t data_size;
 
         // store header bytes
-        if (handle->msg_state > 0 && handle->msg_state <= HEADER_SIZE)
+        if (handle->msg_state > 0 && handle->msg_state <= CC_MSG_HEADER_SIZE)
             msg->header[handle->msg_state - 1] = byte;
 
         switch (handle->msg_state)
@@ -287,7 +290,7 @@ static void serial_recv(void *arg)
 
             // crc
             case 6:
-                if (crc8(msg->header, HEADER_SIZE + msg->data_size) == byte)
+                if (crc8(msg->header, CC_MSG_HEADER_SIZE + msg->data_size) == byte)
                     parser(handle);
 
                 handle->msg_state = 0;
@@ -324,10 +327,8 @@ void TIMER32_0_IRQHandler(void)
 void cc_init(void)
 {
     g_cc_handle.serial = serial_init(BAUD_RATE, serial_recv);
-    g_cc_handle.tx_buffer = g_tx_buffer;
-    g_cc_handle.msg = &g_cc_msg;
-    g_cc_msg.header = g_msg_buffer;
-    g_cc_msg.data = &g_cc_msg.header[HEADER_SIZE];
+    g_cc_handle.msg_rx = cc_msg_new();
+    g_cc_handle.msg_tx = cc_msg_new();
 
     timer_setup();
 }
