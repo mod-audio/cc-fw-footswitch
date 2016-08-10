@@ -32,7 +32,7 @@
 ************************************************************************************************************************
 */
 
-typedef node_t* cc_assignments_t;
+typedef node_t cc_assignments_t;
 
 typedef struct cc_assignment_t {
     int id;
@@ -48,7 +48,7 @@ typedef struct cc_assignment_t {
 
 void cc_assignment_add(cc_assignment_t *assignment);
 void cc_assignment_remove(int assignment_id);
-cc_assignments_t cc_assignments(void);
+cc_assignments_t *cc_assignments(void);
 
 
 /*

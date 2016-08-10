@@ -35,7 +35,7 @@
 ************************************************************************************************************************
 */
 
-static cc_assignments_t g_assignments;
+static cc_assignments_t *g_assignments = 0;
 
 
 /*
@@ -62,19 +62,22 @@ void cc_assignment_add(cc_assignment_t *assignment)
 
 void cc_assignment_remove(int assignment_id)
 {
-    node_t *node;
-    for (node = g_assignments->first; node; node = node->next)
+    cc_assignments_t *assignments;
+    for (assignments = cc_assignments(); assignments; assignments = assignments->next)
     {
-        cc_assignment_t *assignment = node->data;
+        cc_assignment_t *assignment = assignments->data;
         if (assignment_id == assignment->id)
         {
-            node_cut(node);
+            node_cut(assignments);
             break;
         }
     }
 }
 
-cc_assignments_t cc_assignments(void)
+cc_assignments_t *cc_assignments(void)
 {
-    return g_assignments;
+    if (g_assignments)
+        return g_assignments->first;
+
+    return 0;
 }
