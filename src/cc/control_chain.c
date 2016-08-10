@@ -70,6 +70,33 @@ static uint8_t g_tx_buffer[DATA_BUFFER_SIZE];
 ************************************************************************************************************************
 */
 
+static void timer_setup(void)
+{
+    // enable timer 1 clock
+    Chip_TIMER_Init(LPC_TIMER32_0);
+
+    // timer setup for match and interrupt
+    Chip_TIMER_Reset(LPC_TIMER32_0);
+    Chip_TIMER_MatchEnableInt(LPC_TIMER32_0, 1);
+    Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_0, 1);
+
+    // enable timer interrupt
+    NVIC_ClearPendingIRQ(TIMER_32_0_IRQn);
+    NVIC_EnableIRQ(TIMER_32_0_IRQn);
+}
+
+static void timer_set(int frame)
+{
+    Chip_TIMER_Disable(LPC_TIMER32_0);
+    Chip_TIMER_Reset(LPC_TIMER32_0);
+
+    // timer rate is system clock rate
+    uint32_t timer_freq = Chip_Clock_GetSystemClockRate();
+    Chip_TIMER_SetMatch(LPC_TIMER32_0, 1, timer_freq / (1000 / frame));
+
+    Chip_TIMER_Enable(LPC_TIMER32_0);
+}
+
 static void send(cc_handle_t *handle, const cc_msg_t *msg)
 {
     uint32_t i = 0;
@@ -153,6 +180,9 @@ static void parser(cc_handle_t *handle)
     {
         if (msg->command == CC_CMD_CHAIN_SYNC)
         {
+            // device address is used to define the communication frame
+            // timer is reseted each sync message
+            timer_set(handle->address);
         }
         else if (msg->command == CC_CMD_ASSIGNMENT)
         {
@@ -167,7 +197,6 @@ Chip_GPIO_SetPinState(LPC_GPIO, 0, 14, 0);
         else if (msg->command == CC_CMD_UNASSIGNMENT)
         {
         }
-
     }
 }
 
@@ -274,6 +303,24 @@ static void serial_recv(void *arg)
 ************************************************************************************************************************
 */
 
+void TIMER32_0_IRQHandler(void)
+{
+    if (Chip_TIMER_MatchPending(LPC_TIMER32_0, 1))
+    {
+        Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
+
+        cc_assignments_t *assignments;
+        for (assignments = cc_assignments(); assignments; assignments = assignments->next)
+        {
+            cc_assignment_t *assignment = assignments->data;
+
+            // TODO: create flag assignment->need_update
+            //cc_msg_builder(CC_CMD_DATA_UPDATE, assignment, msg);
+            //send(handle, msg);
+        }
+    }
+}
+
 void cc_init(void)
 {
     g_cc_handle.serial = serial_init(BAUD_RATE, serial_recv);
@@ -281,4 +328,6 @@ void cc_init(void)
     g_cc_handle.msg = &g_cc_msg;
     g_cc_msg.header = g_msg_buffer;
     g_cc_msg.data = &g_cc_msg.header[HEADER_SIZE];
+
+    timer_setup();
 }
