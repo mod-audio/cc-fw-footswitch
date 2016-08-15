@@ -185,11 +185,11 @@ static void parser(cc_handle_t *handle)
         {
             // device address is used to define the communication frame
             // timer is reseted each sync message
-            timer_set(handle->address);
+            if (cc_assignments())
+                timer_set(handle->address);
         }
         else if (msg_rx->command == CC_CMD_ASSIGNMENT)
         {
-Chip_GPIO_SetPinState(LPC_GPIO, 0, 14, 0);
             cc_assignment_t assignment;
             cc_msg_parser(msg_rx, &assignment);
             cc_assignment_add(&assignment);
@@ -308,9 +308,12 @@ static void serial_recv(void *arg)
 
 void TIMER32_0_IRQHandler(void)
 {
+    cc_handle_t *handle = &g_cc_handle;
+
     if (Chip_TIMER_MatchPending(LPC_TIMER32_0, 1))
     {
         Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
+        Chip_TIMER_Disable(LPC_TIMER32_0);
 
         cc_assignments_t *assignments;
         for (assignments = cc_assignments(); assignments; assignments = assignments->next)
@@ -318,8 +321,8 @@ void TIMER32_0_IRQHandler(void)
             cc_assignment_t *assignment = assignments->data;
 
             // TODO: create flag assignment->need_update
-            //cc_msg_builder(CC_CMD_DATA_UPDATE, assignment, msg);
-            //send(handle, msg);
+            cc_msg_builder(CC_CMD_DATA_UPDATE, assignment, handle->msg_tx);
+            send(handle, handle->msg_tx);
         }
     }
 }
