@@ -121,12 +121,23 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
 
         msg->data_size = (pdata - msg->data);
     }
-    else if (msg->command == CC_CMD_ASSIGNMENT)
+    else if (command == CC_CMD_ASSIGNMENT)
     {
         msg->data_size = 0;
     }
     else if (command == CC_CMD_DATA_UPDATE)
     {
+        static float value;
+        msg->data_size = 6;
+        msg->data[0] = 1;   // updates count
+        msg->data[1] = 0;   // assignment id
+
+        uint8_t *pvalue = (uint8_t *) &value;
+        msg->data[2] = *pvalue++;
+        msg->data[3] = *pvalue++;
+        msg->data[4] = *pvalue++;
+        msg->data[5] = *pvalue++;
+        value += 1.0;
     }
     else
     {
