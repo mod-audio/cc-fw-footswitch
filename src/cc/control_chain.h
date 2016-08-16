@@ -37,6 +37,7 @@
 */
 
 void cc_init(void);
+void cc_process(void);
 
 
 /*

@@ -345,3 +345,8 @@ void cc_init(void)
 
     timer_setup();
 }
+
+void cc_process(void)
+{
+    // list and process all actuators
+}
