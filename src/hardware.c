@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include "chip.h"
 #include "hardware.h"
-#include "control_chain.h"
 
 
 /*
@@ -110,6 +109,4 @@ void hw_init(void)
     Chip_GPIO_SetPinDIROutput(LPC_GPIO, 1, 24);
 
 #endif
-
-    cc_init();
 }
