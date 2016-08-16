@@ -6,11 +6,12 @@
 
 #include <stdint.h>
 #include "serial.h"
+#include "chip.h"
 #include "utils.h"
 #include "msg.h"
 #include "handshake.h"
 #include "device.h"
-#include "chip.h"
+#include "update.h"
 
 
 /*
@@ -315,13 +316,22 @@ void TIMER32_0_IRQHandler(void)
         Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
         Chip_TIMER_Disable(LPC_TIMER32_0);
 
+        // list all assignments and check if need to update values
         cc_assignments_t *assignments;
         for (assignments = cc_assignments(); assignments; assignments = assignments->next)
         {
-            cc_assignment_t *assignment = assignments->data;
-
             // TODO: create flag assignment->need_update
-            cc_msg_builder(CC_CMD_DATA_UPDATE, assignment, handle->msg_tx);
+            //cc_assignment_t *assignment = assignments->data;
+
+            // for test
+            cc_updates_list_t updates_list;
+            cc_update_t updates[2];
+            updates[0].assignment_id = 0;
+            updates[0].value = 3.141593;
+            updates_list.count = 2;
+            updates_list.updates = updates;
+
+            cc_msg_builder(CC_CMD_DATA_UPDATE, &updates_list, handle->msg_tx);
             send(handle, handle->msg_tx);
         }
     }
