@@ -7,6 +7,7 @@
 #include "msg.h"
 #include "handshake.h"
 #include "device.h"
+#include "update.h"
 
 
 /*
@@ -84,7 +85,8 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
     else if (msg->command == CC_CMD_ASSIGNMENT)
     {
         cc_assignment_t *assignment = data_struct;
-        assignment->actuator_id = msg->data[0];
+        assignment->id = msg->data[0];
+        assignment->actuator_id = msg->data[1];
     }
 
     return 0;
@@ -127,17 +129,25 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
     }
     else if (command == CC_CMD_DATA_UPDATE)
     {
-        static float value;
-        msg->data_size = 6;
-        msg->data[0] = 1;   // updates count
-        msg->data[1] = 0;   // assignment id
+        const cc_updates_list_t *updates_list = data_struct;
+        uint8_t *pdata = msg->data;
 
-        uint8_t *pvalue = (uint8_t *) &value;
-        msg->data[2] = *pvalue++;
-        msg->data[3] = *pvalue++;
-        msg->data[4] = *pvalue++;
-        msg->data[5] = *pvalue++;
-        value += 1.0;
+        // number of updates
+        *pdata++ = updates_list->count;
+
+        for (int i = 0; i < updates_list->count; i++)
+        {
+            cc_update_t *update = &updates_list->updates[i];
+            uint8_t *pvalue = (uint8_t *) &update->value;
+
+            *pdata++ = update->assignment_id;
+            *pdata++ = *pvalue++;
+            *pdata++ = *pvalue++;
+            *pdata++ = *pvalue++;
+            *pdata++ = *pvalue++;
+        }
+
+        msg->data_size = (pdata - msg->data);
     }
     else
     {
