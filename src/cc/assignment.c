@@ -68,7 +68,7 @@ void cc_assignment_remove(int assignment_id)
         cc_assignment_t *assignment = assignments->data;
         if (assignment_id == assignment->id)
         {
-            node_cut(assignments);
+            node_destroy(assignments);
             break;
         }
     }
