@@ -35,8 +35,8 @@
 typedef node_t cc_assignments_t;
 
 typedef struct cc_assignment_t {
-    int id;
-    int actuator_id;
+    int id, actuator_id;
+    float value, min, max;
 } cc_assignment_t;
 
 
@@ -46,8 +46,11 @@ typedef struct cc_assignment_t {
 ************************************************************************************************************************
 */
 
+// add an assignment to the assignments list
 void cc_assignment_add(cc_assignment_t *assignment);
+// remove an assignment from the assignments list
 void cc_assignment_remove(int assignment_id);
+// return the assignments list
 cc_assignments_t *cc_assignments(void);
 
 
