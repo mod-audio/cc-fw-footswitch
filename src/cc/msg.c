@@ -114,12 +114,20 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         // serialize label
         pdata += string_serialize(desc->label, pdata);
 
+        // FIXME: replace by actuators->count after replace node lib
+        uint8_t count = 0;
+        uint8_t *pcount = pdata++;
+
         // serialize actuators data
-        *pdata++ = desc->actuators_count;
-        for (int i = 0; i < desc->actuators_count; i++)
+        cc_actuators_t *actuators;
+        for (actuators = cc_actuators(); actuators; actuators = actuators->next)
         {
-            *pdata++ = desc->actuators[i]->id;
+            count++;
+            cc_actuator_t *actuator = actuators->data;
+            *pdata++ = actuator->id;
         }
+
+        *pcount = count;
 
         msg->data_size = (pdata - msg->data);
     }

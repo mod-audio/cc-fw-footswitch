@@ -9,8 +9,8 @@
 */
 
 #include <stdint.h>
-#include "assignment.h"
 #include "utils.h"
+#include "actuator.h"
 
 
 /*
@@ -33,15 +33,9 @@
 ************************************************************************************************************************
 */
 
-typedef struct cc_actuator_t {
-    uint8_t id;
-    cc_assignment_t *assignment;
-} cc_actuator_t;
-
 typedef struct cc_dev_descriptor_t {
     string_t *label;
-    uint8_t actuators_count;
-    cc_actuator_t **actuators;
+    cc_actuators_t *actuators;
 } cc_dev_descriptor_t;
 
 
@@ -52,8 +46,6 @@ typedef struct cc_dev_descriptor_t {
 */
 
 cc_dev_descriptor_t *cc_device_descriptor(void);
-
-void cc_actuator_map(cc_assignment_t *assignment);
 
 
 /*
