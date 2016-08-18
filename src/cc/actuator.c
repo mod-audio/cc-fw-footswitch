@@ -47,6 +47,9 @@ static unsigned int g_actuators_count;
 
 static void assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignment)
 {
+    static float test;
+    assignment->value = test;
+    test += 1.0;
 }
 
 
