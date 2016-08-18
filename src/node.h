@@ -72,6 +72,7 @@ node_t *node_child(node_t *parent, void *data);
 node_t *node_cut(node_t *node);
 void node_join(node_t *node1, node_t *node2);
 void node_destroy(node_t *node);
+node_t *node_append(node_t *root, node_t *node);
 
 
 /*

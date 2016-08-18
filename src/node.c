@@ -185,3 +185,26 @@ void node_destroy(node_t *node)
         FREE(node);
     }
 }
+
+
+node_t *node_append(node_t *root, node_t *node)
+{
+    // has parent
+    if (root && node)
+    {
+        // first child
+        if (!root->first) root->first = node;
+
+        // already has child
+        if (root->last) root->last->next = node;
+
+        // store the parent and sibling
+        node->parent = root;
+        node->prev = root->last;
+
+        // now this is the last child
+        root->last = node;
+    }
+
+    return node;
+}
