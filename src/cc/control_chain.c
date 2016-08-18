@@ -184,6 +184,9 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
+            // only for test purpose
+            cc_actuators_process();
+
             // device address is used to define the communication frame
             // timer is reseted each sync message
             if (cc_assignments())
@@ -316,24 +319,16 @@ void TIMER32_0_IRQHandler(void)
         Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
         Chip_TIMER_Disable(LPC_TIMER32_0);
 
-        // list all assignments and check if need to update values
-        cc_assignments_t *assignments;
-        for (assignments = cc_assignments(); assignments; assignments = assignments->next)
-        {
-            // TODO: create flag assignment->need_update
-            //cc_assignment_t *assignment = assignments->data;
+        // TODO: [future/optimization] the update message shouldn't be built in the interrupt handler
+        // the time of the frame is being wasted with processing. ideally it has to be cached in the main
+        // loop and the interrupt handler is only used to queue the message (send command)
 
-            // for test
-            cc_updates_list_t updates_list;
-            cc_update_t updates[2];
-            updates[0].assignment_id = 0;
-            updates[0].value = 3.141593;
-            updates_list.count = 2;
-            updates_list.updates = updates;
+        cc_updates_t *updates = cc_updates();
+        cc_msg_builder(CC_CMD_DATA_UPDATE, updates, handle->msg_tx);
+        send(handle, handle->msg_tx);
 
-            cc_msg_builder(CC_CMD_DATA_UPDATE, &updates_list, handle->msg_tx);
-            send(handle, handle->msg_tx);
-        }
+        // clean updates list
+        cc_update_clean();
     }
 }
 
@@ -348,5 +343,7 @@ void cc_init(void)
 
 void cc_process(void)
 {
-    // list and process all actuators
+    // process each actuator going through all assignments
+    // data update messages will be queued and sent in the next frame
+    cc_actuators_process();
 }
