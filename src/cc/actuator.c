@@ -67,6 +67,9 @@ cc_actuator_t *cc_actuator_new(void)
     actuator->id = g_actuators_count++;
     actuator->assignment = 0;
 
+    // append new actuator to actuators list
+    node_child(g_actuators, actuator);
+
     return actuator;
 }
 
