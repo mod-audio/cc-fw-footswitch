@@ -137,15 +137,18 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
     }
     else if (command == CC_CMD_DATA_UPDATE)
     {
-        const cc_updates_list_t *updates_list = data_struct;
         uint8_t *pdata = msg->data;
 
-        // number of updates
-        *pdata++ = updates_list->count;
+        // FIXME: replace by updates->count after replace node lib
+        uint8_t count = 0;
+        uint8_t *pcount = pdata++;
 
-        for (int i = 0; i < updates_list->count; i++)
+        // serialize updates data
+        for (const cc_updates_t *updates = data_struct; updates; updates = updates->next)
         {
-            cc_update_t *update = &updates_list->updates[i];
+            count++;
+
+            cc_update_t *update = updates->data;
             uint8_t *pvalue = (uint8_t *) &update->value;
 
             *pdata++ = update->assignment_id;
@@ -154,6 +157,8 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
             *pdata++ = *pvalue++;
             *pdata++ = *pvalue++;
         }
+
+        *pcount = count;
 
         msg->data_size = (pdata - msg->data);
     }

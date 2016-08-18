@@ -1,67 +1,108 @@
-#ifndef UPDATE_H
-#define UPDATE_H
-
-
 /*
 ************************************************************************************************************************
 *       INCLUDE FILES
 ************************************************************************************************************************
 */
 
-#include <stdint.h>
-#include "node.h"
+#include "update.h"
 
 
 /*
 ************************************************************************************************************************
-*       MACROS
+*       INTERNAL MACROS
+************************************************************************************************************************
+*/
+
+#define MAX_UPDATES     10
+
+
+/*
+************************************************************************************************************************
+*       INTERNAL CONSTANTS
 ************************************************************************************************************************
 */
 
 
 /*
 ************************************************************************************************************************
-*       CONFIGURATION
+*       INTERNAL DATA TYPES
 ************************************************************************************************************************
 */
 
 
 /*
 ************************************************************************************************************************
-*       DATA TYPES
+*       INTERNAL GLOBAL VARIABLES
 ************************************************************************************************************************
 */
 
-typedef node_t cc_updates_t;
-
-typedef struct cc_update_t {
-    uint8_t assignment_id;
-    float value;
-} cc_update_t;
+static cc_updates_t *g_updates = 0;
+static node_t *g_nodes_cache[MAX_UPDATES];
+static cc_update_t g_updates_cache[MAX_UPDATES];
 
 
 /*
 ************************************************************************************************************************
-*       FUNCTION PROTOTYPES
+*       INTERNAL FUNCTIONS
 ************************************************************************************************************************
 */
 
-void cc_update_append(cc_update_t *update);
-void cc_update_clean(void);
-cc_updates_t *cc_updates(void);
+static void cc_update_init(void)
+{
+    g_updates = node_create(0);
+
+    // create a cache of unconnected nodes to be used when an update add is done
+    // using the cache instead of create/destroy a node each time an update is added/removed
+    // prevents memory fragmentation
+    for (int i = 0; i < MAX_UPDATES; i++)
+    {
+        g_nodes_cache[i] = node_create(0);
+    }
+}
 
 
 /*
 ************************************************************************************************************************
-*   CONFIGURATION ERRORS
+*       GLOBAL FUNCTIONS
 ************************************************************************************************************************
 */
 
+void cc_update_append(cc_update_t *update)
+{
+    if (!g_updates)
+        cc_update_init();
 
-/*
-************************************************************************************************************************
-*   END HEADER
-************************************************************************************************************************
-*/
+    // search for an unused node
+    for (int i = 0; i < MAX_UPDATES; i++)
+    {
+        node_t *node = g_nodes_cache[i];
 
-#endif
+        // if data is null, node is free
+        if (!node->data)
+        {
+            node->data = &g_updates_cache[i];
+            cc_update_t *cache = (cc_update_t *) node->data;
+            cache->assignment_id = update->assignment_id;
+            cache->value = update->value;
+            node_append(g_updates, node);
+            break;
+        }
+    }
+}
+
+void cc_update_clean(void)
+{
+    for (cc_updates_t *updates = cc_updates(); updates; updates = updates->next)
+    {
+        node_cut(updates);
+        updates->data = 0;
+    }
+}
+
+cc_updates_t *cc_updates(void)
+{
+    if (g_updates)
+        return g_updates->first;
+
+    return 0;
+}
