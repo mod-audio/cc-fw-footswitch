@@ -53,6 +53,8 @@ cc_dev_descriptor_t *cc_device_descriptor(void)
     static string_t *label;
     label = string_create("FootEx");
 
+    cc_actuator_new();
+
     static cc_dev_descriptor_t dev_descriptor;
     dev_descriptor.label = label;
     dev_descriptor.actuators = cc_actuators();
