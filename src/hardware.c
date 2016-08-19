@@ -97,13 +97,13 @@ void hw_init(void)
     Chip_GPIO_SetPinState(LPC_GPIO, 0, 22, 1);
     Chip_GPIO_SetPinState(LPC_GPIO, 0, 11, 1);
 
-#if 0
     // switches
     Chip_GPIO_SetPinDIRInput(LPC_GPIO, 0, 7);
     Chip_GPIO_SetPinDIRInput(LPC_GPIO, 1, 28);
     Chip_GPIO_SetPinDIRInput(LPC_GPIO, 0, 17);
     Chip_GPIO_SetPinDIRInput(LPC_GPIO, 1, 15);
 
+#if 0
     // lcd backlight
     Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, 18);
     Chip_GPIO_SetPinDIROutput(LPC_GPIO, 1, 24);

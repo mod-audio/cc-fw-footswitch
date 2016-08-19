@@ -87,6 +87,10 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         cc_assignment_t *assignment = data_struct;
         assignment->id = msg->data[0];
         assignment->actuator_id = msg->data[1];
+
+        // FIXME: replace this by the actually code
+        assignment->min = 0.0;
+        assignment->max = 1.0;
     }
 
     return 0;

@@ -37,6 +37,8 @@ typedef node_t cc_actuators_t;
 
 typedef struct cc_actuator_t {
     uint8_t id;
+    volatile float *value;
+    float min, max;
     cc_assignment_t *assignment;
 } cc_actuator_t;
 
@@ -48,7 +50,7 @@ typedef struct cc_actuator_t {
 */
 
 // create a new actuator object
-cc_actuator_t *cc_actuator_new(void);
+cc_actuator_t *cc_actuator_new(volatile float *var);
 // map assignment to actuator
 void cc_actuator_map(cc_assignment_t *assignment);
 // return a list with all created actuators

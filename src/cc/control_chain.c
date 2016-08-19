@@ -184,7 +184,7 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
-            // only for test purpose
+            // FIXME: only for initial tests
             cc_actuators_process();
 
             // device address is used to define the communication frame
@@ -324,6 +324,10 @@ void TIMER32_0_IRQHandler(void)
         // loop and the interrupt handler is only used to queue the message (send command)
 
         cc_updates_t *updates = cc_updates();
+
+        if (!updates)
+            return;
+
         cc_msg_builder(CC_CMD_DATA_UPDATE, updates, handle->msg_tx);
         send(handle, handle->msg_tx);
 

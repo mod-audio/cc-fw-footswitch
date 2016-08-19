@@ -6,6 +6,7 @@
 
 #include "actuator.h"
 #include "update.h"
+#include <math.h>
 
 
 /*
@@ -45,11 +46,22 @@ static unsigned int g_actuators_count;
 ************************************************************************************************************************
 */
 
-static void assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignment)
+static int assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignment)
 {
-    static float test;
-    assignment->value = test;
-    test += 1.0;
+    float a, b;
+    a = (assignment->max - assignment->min) / (actuator->max - actuator->min);
+    b = assignment->min - a*actuator->min;
+
+    float value, actuator_value = *(actuator->value);
+    value = a*actuator_value + b;
+
+    if (abs(assignment->value - value) >= 0.0001)
+    {
+        assignment->value = value;
+        return 1;
+    }
+
+    return 0;
 }
 
 
@@ -59,7 +71,7 @@ static void assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignme
 ************************************************************************************************************************
 */
 
-cc_actuator_t *cc_actuator_new(void)
+cc_actuator_t *cc_actuator_new(volatile float *var)
 {
     if (!g_actuators)
         g_actuators = node_create(0);
@@ -69,6 +81,11 @@ cc_actuator_t *cc_actuator_new(void)
     // initialize actuator data struct
     actuator->id = g_actuators_count++;
     actuator->assignment = 0;
+
+    // FIXME: for initial tests
+    actuator->min = 0.0;
+    actuator->max = 1.0;
+    actuator->value = var;
 
     // append new actuator to actuators list
     node_child(g_actuators, actuator);
@@ -106,11 +123,14 @@ void cc_actuators_process(void)
         cc_actuator_t *actuator = actuators->data;
         cc_assignment_t *assignment = actuator->assignment;
 
-        if (assignment)
-        {
-            // update assignment value according current actuator value
-            assignment_update(actuator, assignment);
+        if (!assignment)
+            continue;
 
+        // update assignment value according current actuator value
+        int updated = assignment_update(actuator, assignment);
+
+        if (updated)
+        {
             // append update to be sent
             cc_update_t update;
             update.assignment_id = assignment->id;
