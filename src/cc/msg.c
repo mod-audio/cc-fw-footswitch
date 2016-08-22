@@ -91,6 +91,8 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         // FIXME: replace this by the actually code
         assignment->min = 0.0;
         assignment->max = 1.0;
+        assignment->mode = 1;
+        assignment->toggle_lock = 0;
     }
 
     return 0;

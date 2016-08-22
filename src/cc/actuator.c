@@ -48,6 +48,26 @@ static unsigned int g_actuators_count;
 
 static int assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignment)
 {
+    if (assignment->mode & CC_MODE_TOGGLE)
+    {
+        float actuator_value = *(actuator->value);
+
+        if (actuator_value > 0.0)
+        {
+            if (assignment->toggle_lock == 0)
+            {
+                assignment->value = 1.0 - assignment->value;
+                assignment->toggle_lock = 1;
+                return 1;
+            }
+        }
+        else
+        {
+            assignment->toggle_lock = 0;
+        }
+    }
+
+#if 0
     float a, b;
     a = (assignment->max - assignment->min) / (actuator->max - actuator->min);
     b = assignment->min - a*actuator->min;
@@ -60,6 +80,7 @@ static int assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignmen
         assignment->value = value;
         return 1;
     }
+#endif
 
     return 0;
 }

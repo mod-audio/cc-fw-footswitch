@@ -88,6 +88,7 @@ void cc_assignment_add(cc_assignment_t *assignment)
             cache->value = assignment->value;
             cache->min = assignment->min;
             cache->max = assignment->max;
+            cache->mode = assignment->mode;
             node_append(g_assignments, node);
             cc_actuator_map(cache);
             break;

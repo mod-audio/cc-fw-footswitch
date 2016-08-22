@@ -18,6 +18,8 @@
 ************************************************************************************************************************
 */
 
+#define CC_MODE_TOGGLE  0x01
+
 
 /*
 ************************************************************************************************************************
@@ -37,6 +39,8 @@ typedef node_t cc_assignments_t;
 typedef struct cc_assignment_t {
     int id, actuator_id;
     float value, min, max;
+    uint32_t mode;
+    int toggle_lock;
 } cc_assignment_t;
 
 

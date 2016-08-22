@@ -8,7 +8,7 @@ int main(void)
     hw_init();
     cc_init();
 
-    static volatile float foot2 = 3.141593;
+    static volatile float foot2;
     cc_actuator_new(&foot2);
 
     while (1)
@@ -24,7 +24,7 @@ int main(void)
             foot2 = 0.0;
         }
 
-        //cc_process();
+        cc_process();
     }
 
     return 0;

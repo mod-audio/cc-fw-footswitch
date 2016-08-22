@@ -184,9 +184,6 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
-            // FIXME: only for initial tests
-            cc_actuators_process();
-
             // device address is used to define the communication frame
             // timer is reseted each sync message
             if (cc_assignments())
