@@ -38,7 +38,7 @@ typedef node_t cc_assignments_t;
 
 typedef struct cc_assignment_t {
     int id, actuator_id;
-    float value, min, max;
+    float value, min, max, def;
     uint32_t mode;
     int toggle_lock;
 } cc_assignment_t;

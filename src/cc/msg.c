@@ -85,14 +85,16 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
     else if (msg->command == CC_CMD_ASSIGNMENT)
     {
         cc_assignment_t *assignment = data_struct;
-        assignment->id = msg->data[0];
-        assignment->actuator_id = msg->data[1];
 
-        // FIXME: replace this by the actually code
-        assignment->min = 0.0;
-        assignment->max = 1.0;
-        assignment->mode = 1;
-        assignment->toggle_lock = 0;
+        int i = 0;
+        assignment->id = msg->data[i++];
+        assignment->actuator_id = msg->data[i++];
+
+        i += bytes_to_float(&msg->data[i], &assignment->value);
+        i += bytes_to_float(&msg->data[i], &assignment->min);
+        i += bytes_to_float(&msg->data[i], &assignment->max);
+        i += bytes_to_float(&msg->data[i], &assignment->def);
+        assignment->mode = msg->data[i++];
     }
 
     return 0;
