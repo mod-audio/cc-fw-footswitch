@@ -1,5 +1,5 @@
-#ifndef ASSIGNMENT_H
-#define ASSIGNMENT_H
+#ifndef CC_ASSIGNMENT_H
+#define CC_ASSIGNMENT_H
 
 
 /*

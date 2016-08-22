@@ -1,5 +1,5 @@
-#ifndef MSG_H
-#define MSG_H
+#ifndef CC_MSG_H
+#define CC_MSG_H
 
 
 /*

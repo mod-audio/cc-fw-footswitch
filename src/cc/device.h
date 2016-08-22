@@ -1,5 +1,5 @@
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef CC_DEVICE_H
+#define CC_DEVICE_H
 
 
 /*

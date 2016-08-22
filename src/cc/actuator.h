@@ -1,5 +1,5 @@
-#ifndef ACTUATOR_H
-#define ACTUATOR_H
+#ifndef CC_ACTUATOR_H
+#define CC_ACTUATOR_H
 
 
 /*
