@@ -96,6 +96,11 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         i += bytes_to_float(&msg->data[i], &assignment->def);
         assignment->mode = msg->data[i++];
     }
+    else if (msg->command == CC_CMD_UNASSIGNMENT)
+    {
+        uint8_t *assignment_id = data_struct;
+        *assignment_id = msg->data[0];
+    }
 
     return 0;
 }
@@ -139,7 +144,7 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
 
         msg->data_size = (pdata - msg->data);
     }
-    else if (command == CC_CMD_ASSIGNMENT)
+    else if (command == CC_CMD_ASSIGNMENT || command == CC_CMD_UNASSIGNMENT)
     {
         msg->data_size = 0;
     }

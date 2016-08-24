@@ -200,6 +200,12 @@ static void parser(cc_handle_t *handle)
         }
         else if (msg_rx->command == CC_CMD_UNASSIGNMENT)
         {
+            uint8_t actuator_id;
+            cc_msg_parser(msg_rx, &actuator_id);
+            cc_assignment_remove(actuator_id);
+
+            cc_msg_builder(CC_CMD_UNASSIGNMENT, NULL, handle->msg_tx);
+            send(handle, handle->msg_tx);
         }
     }
 }
