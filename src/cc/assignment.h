@@ -19,6 +19,7 @@
 */
 
 #define CC_MODE_TOGGLE  0x01
+#define CC_MODE_TRIGGER 0x02
 
 
 /*
@@ -40,7 +41,6 @@ typedef struct cc_assignment_t {
     int id, actuator_id;
     float value, min, max, def;
     uint32_t mode;
-    int toggle_lock;
 } cc_assignment_t;
 
 

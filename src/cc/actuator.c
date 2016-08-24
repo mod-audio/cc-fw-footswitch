@@ -6,6 +6,7 @@
 
 #include "actuator.h"
 #include "update.h"
+#include <string.h>
 #include <math.h>
 
 
@@ -48,22 +49,27 @@ static unsigned int g_actuators_count;
 
 static int assignment_update(cc_actuator_t *actuator, cc_assignment_t *assignment)
 {
-    if (assignment->mode & CC_MODE_TOGGLE)
+    if (assignment->mode & (CC_MODE_TOGGLE | CC_MODE_TRIGGER))
     {
         float actuator_value = *(actuator->value);
 
         if (actuator_value > 0.0)
         {
-            if (assignment->toggle_lock == 0)
+            if (actuator->lock == 0)
             {
-                assignment->value = 1.0 - assignment->value;
-                assignment->toggle_lock = 1;
+                actuator->lock = 1;
+
+                if (assignment->mode & CC_MODE_TOGGLE)
+                    assignment->value = 1.0 - assignment->value;
+                else
+                    assignment->value = 1.0;
+
                 return 1;
             }
         }
         else
         {
-            assignment->toggle_lock = 0;
+            actuator->lock = 0;
         }
     }
 
@@ -98,10 +104,10 @@ cc_actuator_t *cc_actuator_new(volatile float *var)
         g_actuators = node_create(0);
 
     cc_actuator_t *actuator = (cc_actuator_t *) malloc(sizeof (cc_actuator_t));
+    memset(actuator, 0, sizeof (cc_actuator_t));
 
     // initialize actuator data struct
     actuator->id = g_actuators_count++;
-    actuator->assignment = 0;
 
     // FIXME: for initial tests
     actuator->min = 0.0;

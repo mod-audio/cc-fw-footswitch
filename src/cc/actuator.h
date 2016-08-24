@@ -40,6 +40,7 @@ typedef struct cc_actuator_t {
     volatile float *value;
     float min, max;
     cc_assignment_t *assignment;
+    int lock;
 } cc_actuator_t;
 
 
