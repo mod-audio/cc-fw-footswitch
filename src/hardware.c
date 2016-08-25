@@ -15,9 +15,9 @@
 ************************************************************************************************************************
 */
 
-#define N_BUTTONS       (sizeof(g_buttons)/sizeof(pin_t))
-#define N_LEDS          (sizeof(g_leds)/sizeof(pin_t))
-#define N_BACKLIGHTS    (sizeof(g_backlights)/sizeof(pin_t))
+#define N_BUTTONS       (sizeof(g_buttons_gpio)/sizeof(gpio_t))
+#define N_LEDS          (sizeof(g_leds_gpio)/sizeof(gpio_t))
+#define N_BACKLIGHTS    (sizeof(g_backlights_gpio)/sizeof(gpio_t))
 
 
 /*
@@ -36,10 +36,16 @@ const uint32_t ExtRateIn = 0;
 ************************************************************************************************************************
 */
 
-typedef struct pin_t
+typedef struct gpio_t
 {
     int port, pin;
-} pin_t;
+} gpio_t;
+
+typedef struct button_t
+{
+    int state, event;
+    unsigned int count;
+} button_t;
 
 
 /*
@@ -48,9 +54,10 @@ typedef struct pin_t
 ************************************************************************************************************************
 */
 
-static const pin_t g_buttons[] = {BUTTONS_PINS};
-static const pin_t g_leds[] = {LEDS_PINS};
-static const pin_t g_backlights[] = {BACKLIGHTS_PINS};
+static const gpio_t g_buttons_gpio[] = {BUTTONS_PINS};
+static const gpio_t g_leds_gpio[] = {LEDS_PINS};
+static const gpio_t g_backlights_gpio[] = {BACKLIGHTS_PINS};
+static button_t g_buttons[N_BUTTONS];
 
 
 /*
@@ -58,6 +65,43 @@ static const pin_t g_backlights[] = {BACKLIGHTS_PINS};
 *       INTERNAL FUNCTIONS
 ************************************************************************************************************************
 */
+// buttons process
+void SysTick_Handler(void)
+{
+    for (int i = 0; i < N_BUTTONS; i++)
+    {
+        const gpio_t *gpio = &g_buttons_gpio[i];
+        button_t *button = &g_buttons[i];
+
+        int value = (Chip_GPIO_GetPinState(LPC_GPIO, gpio->port, gpio->pin) == 0 ? 1 : 0);
+        if (value)
+        {
+            if (button->state == BUTTON_RELEASED)
+            {
+                button->count++;
+                if (button->count >= BUTTON_DEBOUNCE)
+                {
+                    button->count = 0;
+                    button->state = BUTTON_PRESSED;
+                    button->event = BUTTON_PRESSED;
+                }
+            }
+        }
+        else
+        {
+            if (button->state == BUTTON_PRESSED)
+            {
+                button->count++;
+                if (button->count >= BUTTON_DEBOUNCE)
+                {
+                    button->count = 0;
+                    button->state = BUTTON_RELEASED;
+                    button->event = BUTTON_RELEASED;
+                }
+            }
+        }
+    }
+}
 
 
 /*
@@ -69,6 +113,7 @@ static const pin_t g_backlights[] = {BACKLIGHTS_PINS};
 void hw_init(void)
 {
     Chip_SystemInit();
+    SystemCoreClockUpdate();
 
     Chip_GPIO_Init(LPC_GPIO);
 
@@ -81,33 +126,42 @@ void hw_init(void)
     // leds
     for (int i = 0; i < N_LEDS; i++)
     {
-        Chip_GPIO_SetPinDIROutput(LPC_GPIO, g_leds[i].port, g_leds[i].pin);
-        Chip_GPIO_SetPinState(LPC_GPIO, g_leds[i].port, g_leds[i].pin, 1);
+        const gpio_t *gpio = &g_leds_gpio[i];
+        Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio->port, gpio->pin);
+        Chip_GPIO_SetPinState(LPC_GPIO, gpio->port, gpio->pin, 1);
     }
 
     // buttons
     for (int i = 0; i < N_BUTTONS; i++)
     {
-        Chip_GPIO_SetPinDIRInput(LPC_GPIO, g_buttons[i].port, g_buttons[i].pin);
+        const gpio_t *gpio = &g_buttons_gpio[i];
+        Chip_GPIO_SetPinDIRInput(LPC_GPIO, gpio->port, gpio->pin);
+        g_buttons[i].event = -1;
     }
 
     // backlights
     for (int i = 0; i < N_BACKLIGHTS; i++)
     {
-        Chip_GPIO_SetPinDIROutput(LPC_GPIO, g_backlights[i].port, g_backlights[i].pin);
-        Chip_GPIO_SetPinState(LPC_GPIO, g_backlights[i].port, g_backlights[i].pin, 0);
+        const gpio_t *gpio = &g_backlights_gpio[i];
+        Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio->port, gpio->pin);
+        Chip_GPIO_SetPinState(LPC_GPIO, gpio->port, gpio->pin, 0);
     }
+
+
+    SysTick_Config(SystemCoreClock / 1000);
 }
 
 int hw_button(int button)
 {
-    const pin_t *b = &g_buttons[button];
-    return (Chip_GPIO_GetPinState(LPC_GPIO, b->port, b->pin) == 0 ? 1 : 0);
+    int event = g_buttons[button].event;
+    g_buttons[button].event = -1;
+
+    return event;
 }
 
 void hw_led(int led, int color, int value)
 {
-    const pin_t *l = &g_leds[(led * 3) + color];
+    const gpio_t *l = &g_leds_gpio[(led * 3) + color];
 
     if (value == LED_OFF)
         Chip_GPIO_SetPinState(LPC_GPIO, l->port, l->pin, 1);

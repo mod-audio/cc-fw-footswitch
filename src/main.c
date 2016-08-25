@@ -12,12 +12,13 @@ int main(void)
 
     while (1)
     {
-        if (hw_button(1))
+        int button_status = hw_button(1);
+        if (button_status == BUTTON_PRESSED)
         {
             hw_led(3, LED_R, LED_ON);
             foot2 = 1.0;
         }
-        else
+        else if (button_status == BUTTON_RELEASED)
         {
             hw_led(3, LED_R, LED_OFF);
             foot2 = 0.0;

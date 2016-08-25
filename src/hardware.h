@@ -18,6 +18,8 @@
 enum {LED_R, LED_G, LED_B};
 enum {LED_OFF, LED_ON, LED_TOGGLE = -1};
 
+enum {BUTTON_RELEASED, BUTTON_PRESSED};
+
 
 /*
 ************************************************************************************************************************
@@ -28,6 +30,8 @@ enum {LED_OFF, LED_ON, LED_TOGGLE = -1};
 #define BUTTONS_PINS    {0,7},{1,28},{0,17},{1,15}
 #define LEDS_PINS       {1,21},{0,8},{1,31},{0,5},{1,23},{0,21},{0,13},{0,12},{0,14},{1,29},{0,22},{0,11}
 #define BACKLIGHTS_PINS {0,18},{1,24}
+
+#define BUTTON_DEBOUNCE 10
 
 
 /*
