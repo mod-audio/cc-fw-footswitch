@@ -171,7 +171,7 @@ static void parser(cc_handle_t *handle)
         if (msg_rx->command == CC_CMD_DEV_DESCRIPTOR)
         {
             cc_dev_descriptor_t *desc;
-            desc = cc_device_descriptor();
+            desc = cc_device_descriptor("FootEx");
 
             cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, desc, handle->msg_tx);
             send(handle, handle->msg_tx);

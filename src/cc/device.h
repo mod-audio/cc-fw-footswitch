@@ -45,7 +45,7 @@ typedef struct cc_dev_descriptor_t {
 ************************************************************************************************************************
 */
 
-cc_dev_descriptor_t *cc_device_descriptor(void);
+cc_dev_descriptor_t *cc_device_descriptor(const char *device_name);
 
 
 /*

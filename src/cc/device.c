@@ -48,14 +48,16 @@
 ************************************************************************************************************************
 */
 
-cc_dev_descriptor_t *cc_device_descriptor(void)
+cc_dev_descriptor_t *cc_device_descriptor(const char *device_name)
 {
-    static string_t *label;
-    label = string_create("FootEx");
+    static cc_dev_descriptor_t *dev_descriptor;
 
-    static cc_dev_descriptor_t dev_descriptor;
-    dev_descriptor.label = label;
-    dev_descriptor.actuators = cc_actuators();
+    if (!dev_descriptor)
+    {
+        dev_descriptor = malloc(sizeof(cc_dev_descriptor_t));
+        dev_descriptor->label = string_create(device_name);
+        dev_descriptor->actuators = cc_actuators();
+    }
 
-    return &dev_descriptor;
+    return dev_descriptor;
 }
