@@ -1,5 +1,4 @@
 #include "hardware.h"
-#include "chip.h"
 #include "control_chain.h"
 #include "actuator.h"
 
@@ -13,14 +12,14 @@ int main(void)
 
     while (1)
     {
-        if (Chip_GPIO_GetPinState(LPC_GPIO, 1, 28) == 0)
+        if (hw_button(1))
         {
-            Chip_GPIO_SetPinState(LPC_GPIO, 1, 29, 0);
+            hw_led(3, LED_R, LED_ON);
             foot2 = 1.0;
         }
         else
         {
-            Chip_GPIO_SetPinState(LPC_GPIO, 1, 29, 1);
+            hw_led(3, LED_R, LED_OFF);
             foot2 = 0.0;
         }
 
