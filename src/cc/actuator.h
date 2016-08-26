@@ -54,6 +54,8 @@ typedef struct cc_actuator_t {
 cc_actuator_t *cc_actuator_new(volatile float *var);
 // map assignment to actuator
 void cc_actuator_map(cc_assignment_t *assignment);
+// unmap assignment from actuator
+void cc_actuator_unmap(cc_assignment_t *assignment);
 // return a list with all created actuators
 cc_actuators_t *cc_actuators(void);
 // process the assignments of all created actuators

@@ -134,6 +134,20 @@ void cc_actuator_map(cc_assignment_t *assignment)
     }
 }
 
+void cc_actuator_unmap(cc_assignment_t *assignment)
+{
+    cc_actuators_t *actuators;
+    for (actuators = cc_actuators(); actuators; actuators = actuators->next)
+    {
+        cc_actuator_t *actuator = actuators->data;
+        if (actuator->id == assignment->actuator_id)
+        {
+            actuator->assignment = 0;
+            break;
+        }
+    }
+}
+
 cc_actuators_t *cc_actuators(void)
 {
     if (g_actuators)
