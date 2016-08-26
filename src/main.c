@@ -7,21 +7,28 @@ int main(void)
     hw_init();
     cc_init();
 
-    static volatile float foot2;
-    cc_actuator_new(&foot2);
+    static volatile float foots[4];
+
+    for (int i = 0; i < 4; i++)
+    {
+        cc_actuator_new(&foots[i]);
+    }
 
     while (1)
     {
-        int button_status = hw_button(1);
-        if (button_status == BUTTON_PRESSED)
+        for (int i = 0; i < 4; i++)
         {
-            hw_led(3, LED_R, LED_ON);
-            foot2 = 1.0;
-        }
-        else if (button_status == BUTTON_RELEASED)
-        {
-            hw_led(3, LED_R, LED_OFF);
-            foot2 = 0.0;
+            int button_status = hw_button(i);
+            if (button_status == BUTTON_PRESSED)
+            {
+                hw_led(i, LED_R, LED_ON);
+                foots[i] = 1.0;
+            }
+            else if (button_status == BUTTON_RELEASED)
+            {
+                hw_led(i, LED_R, LED_OFF);
+                foots[i] = 0.0;
+            }
         }
 
         cc_process();
