@@ -105,7 +105,7 @@ void cc_assignment_remove(int assignment_id)
         if (assignment_id == assignment->id)
         {
             cc_actuator_unmap(assignment);
-            assignment = 0;
+            assignments->data = 0;
             node_cut(assignments);
             break;
         }
