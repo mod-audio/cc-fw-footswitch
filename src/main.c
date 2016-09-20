@@ -21,17 +21,26 @@ int main(void)
             int button_status = hw_button(i);
             if (button_status == BUTTON_PRESSED)
             {
-                hw_led(i, LED_R, LED_ON);
                 foots[i] = 1.0;
             }
             else if (button_status == BUTTON_RELEASED)
             {
-                hw_led(i, LED_R, LED_OFF);
                 foots[i] = 0.0;
             }
         }
 
         cc_process();
+
+        for (int i = 0; i < 4; i++)
+            hw_led(i, LED_R, LED_OFF);
+
+        cc_assignments_t *assignments;
+        for (assignments = cc_assignments(); assignments; assignments = assignments->next)
+        {
+            cc_assignment_t *assignment = assignments->data;
+            if (assignment->mode == CC_MODE_TOGGLE)
+                hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
+        }
     }
 
     return 0;
