@@ -91,7 +91,7 @@ serial_t* serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg))
     Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 13, FUNC3);  // TX pin
     Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 14, FUNC3);  // RX pin
     Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, 16);     // OE pin
-    Chip_GPIO_SetPinState(LPC_GPIO, 0, 16, 0);
+    Chip_GPIO_SetPinState(LPC_GPIO, 0, 16, 1);
 
     // setup serial
     Chip_UART_Init(LPC_USART);
