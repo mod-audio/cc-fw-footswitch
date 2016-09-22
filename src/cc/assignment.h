@@ -9,7 +9,7 @@
 */
 
 #include <stdint.h>
-#include "node.h"
+#include "lili.h"
 
 
 /*
@@ -35,7 +35,7 @@
 ****************************************************************************************************
 */
 
-typedef node_t cc_assignments_t;
+typedef lili_t cc_assignments_t;
 
 typedef struct cc_assignment_t {
     int id, actuator_id;

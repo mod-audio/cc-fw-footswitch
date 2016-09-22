@@ -9,7 +9,7 @@
 */
 
 #include <stdint.h>
-#include "node.h"
+#include "lili.h"
 #include "assignment.h"
 
 
@@ -33,10 +33,10 @@
 ****************************************************************************************************
 */
 
-typedef node_t cc_actuators_t;
+typedef lili_t cc_actuators_t;
 
 typedef struct cc_actuator_t {
-    uint8_t id;
+    int id;
     volatile float *value;
     float min, max;
     cc_assignment_t *assignment;

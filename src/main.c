@@ -1,6 +1,7 @@
 #include "hardware.h"
 #include "control_chain.h"
 #include "actuator.h"
+#include "update.h"
 
 int main(void)
 {
@@ -34,12 +35,15 @@ int main(void)
         for (int i = 0; i < 4; i++)
             hw_led(i, LED_R, LED_OFF);
 
-        cc_assignments_t *assignments;
-        for (assignments = cc_assignments(); assignments; assignments = assignments->next)
+        cc_assignments_t *assignments = cc_assignments();
+        if (assignments)
         {
-            cc_assignment_t *assignment = assignments->data;
-            if (assignment->mode == CC_MODE_TOGGLE)
-                hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
+            LILI_FOREACH(assignments, node)
+            {
+                cc_assignment_t *assignment = node->data;
+                if (assignment->mode == CC_MODE_TOGGLE)
+                    hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
+            }
         }
     }
 

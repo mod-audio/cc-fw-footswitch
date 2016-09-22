@@ -33,8 +33,8 @@
 ****************************************************************************************************
 */
 
-enum cc_cmd_t {CC_CMD_CHAIN_SYNC, CC_CMD_HANDSHAKE, CC_CMD_DEV_DESCRIPTOR, CC_CMD_ASSIGNMENT, CC_CMD_DATA_UPDATE,
-               CC_CMD_UNASSIGNMENT};
+enum cc_cmd_t {CC_CMD_CHAIN_SYNC, CC_CMD_HANDSHAKE, CC_CMD_DEV_DESCRIPTOR, CC_CMD_ASSIGNMENT,
+               CC_CMD_DATA_UPDATE, CC_CMD_UNASSIGNMENT};
 
 typedef struct cc_msg_t {
     uint8_t dev_address;

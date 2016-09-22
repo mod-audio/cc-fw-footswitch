@@ -127,20 +127,14 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         // serialize label
         pdata += string_serialize(desc->label, pdata);
 
-        // FIXME: replace by actuators->count after replace node lib
-        uint8_t count = 0;
-        uint8_t *pcount = pdata++;
-
         // serialize actuators data
-        cc_actuators_t *actuators;
-        for (actuators = cc_actuators(); actuators; actuators = actuators->next)
+        cc_actuators_t *actuators = cc_actuators();
+        *pdata++ = actuators->count;
+        LILI_FOREACH(actuators, node)
         {
-            count++;
-            cc_actuator_t *actuator = actuators->data;
+            cc_actuator_t *actuator = node->data;
             *pdata++ = actuator->id;
         }
-
-        *pcount = count;
 
         msg->data_size = (pdata - msg->data);
     }
@@ -152,26 +146,21 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
     {
         uint8_t *pdata = msg->data;
 
-        // FIXME: replace by updates->count after replace node lib
-        uint8_t count = 0;
-        uint8_t *pcount = pdata++;
+        cc_updates_t *updates = cc_updates();
+        *pdata++ = updates->count;
 
         // serialize updates data
-        for (const cc_updates_t *updates = data_struct; updates; updates = updates->next)
+        cc_update_t update;
+        while (cc_update_pop(&update))
         {
-            count++;
+            uint8_t *pvalue = (uint8_t *) &update.value;
 
-            cc_update_t *update = updates->data;
-            uint8_t *pvalue = (uint8_t *) &update->value;
-
-            *pdata++ = update->assignment_id;
+            *pdata++ = update.assignment_id;
             *pdata++ = *pvalue++;
             *pdata++ = *pvalue++;
             *pdata++ = *pvalue++;
             *pdata++ = *pvalue++;
         }
-
-        *pcount = count;
 
         msg->data_size = (pdata - msg->data);
     }

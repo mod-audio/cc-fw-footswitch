@@ -322,20 +322,17 @@ void TIMER32_0_IRQHandler(void)
         Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
         Chip_TIMER_Disable(LPC_TIMER32_0);
 
-        // TODO: [future/optimization] the update message shouldn't be built in the interrupt handler
-        // the time of the frame is being wasted with processing. ideally it has to be cached in the main
-        // loop and the interrupt handler is only used to queue the message (send command)
+        // TODO: [future/optimization] the update message shouldn't be built in the interrupt
+        // handler the time of the frame is being wasted with processing. ideally it has to be
+        // cached in the main loop and the interrupt handler is only used to queue the message
+        // (send command)
 
         cc_updates_t *updates = cc_updates();
-
-        if (!updates)
+        if (!updates || updates->count == 0)
             return;
 
-        cc_msg_builder(CC_CMD_DATA_UPDATE, updates, handle->msg_tx);
+        cc_msg_builder(CC_CMD_DATA_UPDATE, NULL, handle->msg_tx);
         send(handle, handle->msg_tx);
-
-        // clean updates list
-        cc_update_clean();
     }
 }
 

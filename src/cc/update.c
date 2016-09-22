@@ -37,7 +37,6 @@
 */
 
 static cc_updates_t *g_updates = 0;
-static node_t *g_nodes_cache[MAX_UPDATES];
 static cc_update_t g_updates_cache[MAX_UPDATES];
 
 
@@ -47,19 +46,6 @@ static cc_update_t g_updates_cache[MAX_UPDATES];
 ****************************************************************************************************
 */
 
-static void cc_update_init(void)
-{
-    g_updates = node_create(0);
-
-    // create a cache of unconnected nodes to be used when an update add is done
-    // using the cache instead of create/destroy a node each time an update is added/removed
-    // prevents memory fragmentation
-    for (int i = 0; i < MAX_UPDATES; i++)
-    {
-        g_nodes_cache[i] = node_create(0);
-    }
-}
-
 
 /*
 ****************************************************************************************************
@@ -67,42 +53,50 @@ static void cc_update_init(void)
 ****************************************************************************************************
 */
 
-void cc_update_append(cc_update_t *update)
+void cc_update_push(const cc_update_t *update)
 {
+    // initialize update list and cache
     if (!g_updates)
-        cc_update_init();
+    {
+        g_updates = lili_create();
 
-    // search for an unused node
+        for (int i = 0; i < MAX_UPDATES; i++)
+            g_updates_cache[i].assignment_id = -1;
+    }
+
+    // search for unused update
     for (int i = 0; i < MAX_UPDATES; i++)
     {
-        node_t *node = g_nodes_cache[i];
-
-        // if data is null, node is free
-        if (!node->data)
+        cc_update_t *cache = &g_updates_cache[i];
+        if (cache->assignment_id == -1)
         {
-            node->data = &g_updates_cache[i];
-            cc_update_t *cache = (cc_update_t *) node->data;
             cache->assignment_id = update->assignment_id;
             cache->value = update->value;
-            node_append(g_updates, node);
+            lili_push(g_updates, cache);
             break;
         }
     }
 }
 
-void cc_update_clean(void)
+int cc_update_pop(cc_update_t *update)
 {
-    for (cc_updates_t *updates = cc_updates(); updates; updates = updates->next)
+    cc_update_t *cache = lili_pop_front(g_updates);
+
+    if (cache)
     {
-        node_cut(updates);
-        updates->data = 0;
+        update->assignment_id = cache->assignment_id;
+        update->value = cache->value;
+
+        // make cache position available again
+        cache->assignment_id = -1;
+
+        return 1;
     }
+
+    return 0;
 }
 
 cc_updates_t *cc_updates(void)
 {
-    if (g_updates)
-        return g_updates->first;
-
-    return 0;
+    return g_updates;
 }
