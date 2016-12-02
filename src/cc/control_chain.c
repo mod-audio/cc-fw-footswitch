@@ -5,8 +5,8 @@
 */
 
 #include <stdint.h>
-#include "serial.h"
-#include "chip.h"
+#include "control_chain.h"
+#include "chip.h" // FIXME: non portable
 #include "utils.h"
 #include "msg.h"
 #include "handshake.h"
@@ -20,7 +20,6 @@
 ****************************************************************************************************
 */
 
-#define BAUD_RATE           115200
 #define SYNC_BYTE           0xA7
 #define BROADCAST_ADDRESS   0
 
@@ -42,8 +41,8 @@ enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQU
 */
 
 typedef struct cc_handle_t {
+    void (*response_cb)(void *arg);
     int comm_state, msg_state;
-    serial_t *serial;
     cc_msg_t *msg_rx, *msg_tx;
     uint8_t address;
     cc_handshake_t *handshake;
@@ -96,6 +95,10 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
 {
     uint8_t *buffer = handle->msg_tx->header;
 
+    // add sync byte
+    buffer[0] = SYNC_BYTE;
+    buffer++;
+
     // header
     uint32_t i = 0;
     buffer[i++] = handle->address;
@@ -120,17 +123,11 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
     // calculate crc
     buffer[i++] = crc8(buffer, CC_MSG_HEADER_SIZE + msg->data_size);
 
-    // send sync byte
-    uint8_t sync = SYNC_BYTE;
-    serial_data_t sdata;
-    sdata.data = &sync;
-    sdata.size = 1;
-    serial_send(handle->serial, &sdata);
-
     // send message
-    sdata.data = buffer;
-    sdata.size = i;
-    serial_send(handle->serial, &sdata);
+    cc_data_t response;
+    response.data = buffer;
+    response.size = i + 1;
+    handle->response_cb(&response);
 }
 
 static void parser(cc_handle_t *handle)
@@ -210,17 +207,63 @@ static void parser(cc_handle_t *handle)
     }
 }
 
-static void serial_recv(void *arg)
+
+/*
+****************************************************************************************************
+*       GLOBAL FUNCTIONS
+****************************************************************************************************
+*/
+
+void TIMER32_0_IRQHandler(void)
 {
-    serial_data_t *serial = arg;
+    cc_handle_t *handle = &g_cc_handle;
+
+    if (Chip_TIMER_MatchPending(LPC_TIMER32_0, 1))
+    {
+        Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
+        Chip_TIMER_Disable(LPC_TIMER32_0);
+
+        // TODO: [future/optimization] the update message shouldn't be built in the interrupt
+        // handler the time of the frame is being wasted with processing. ideally it has to be
+        // cached in the main loop and the interrupt handler is only used to queue the message
+        // (send command)
+
+        cc_updates_t *updates = cc_updates();
+        if (!updates || updates->count == 0)
+            return;
+
+        cc_msg_builder(CC_CMD_DATA_UPDATE, NULL, handle->msg_tx);
+        send(handle, handle->msg_tx);
+    }
+}
+
+void cc_init(void (*response_cb)(void *arg))
+{
+    g_cc_handle.response_cb = response_cb;
+    g_cc_handle.msg_rx = cc_msg_new();
+    g_cc_handle.msg_tx = cc_msg_new();
+
+    timer_setup();
+}
+
+void cc_process(void)
+{
+    // process each actuator going through all assignments
+    // data update messages will be queued and sent in the next frame
+    cc_actuators_process();
+}
+
+void cc_parse(const cc_data_t *received)
+{
     uint16_t count = 0;
 
     cc_handle_t *handle = &g_cc_handle;
     cc_msg_t *msg = handle->msg_rx;
 
-    while (serial->size--)
+    uint32_t size = received->size;
+    while (size--)
     {
-        uint8_t byte = serial->data[count++];
+        uint8_t byte = received->data[count++];
         uint16_t data_size;
 
         // store header bytes
@@ -304,50 +347,4 @@ static void serial_recv(void *arg)
                 break;
         }
     }
-}
-
-
-/*
-****************************************************************************************************
-*       GLOBAL FUNCTIONS
-****************************************************************************************************
-*/
-
-void TIMER32_0_IRQHandler(void)
-{
-    cc_handle_t *handle = &g_cc_handle;
-
-    if (Chip_TIMER_MatchPending(LPC_TIMER32_0, 1))
-    {
-        Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
-        Chip_TIMER_Disable(LPC_TIMER32_0);
-
-        // TODO: [future/optimization] the update message shouldn't be built in the interrupt
-        // handler the time of the frame is being wasted with processing. ideally it has to be
-        // cached in the main loop and the interrupt handler is only used to queue the message
-        // (send command)
-
-        cc_updates_t *updates = cc_updates();
-        if (!updates || updates->count == 0)
-            return;
-
-        cc_msg_builder(CC_CMD_DATA_UPDATE, NULL, handle->msg_tx);
-        send(handle, handle->msg_tx);
-    }
-}
-
-void cc_init(void)
-{
-    g_cc_handle.serial = serial_init(BAUD_RATE, serial_recv);
-    g_cc_handle.msg_rx = cc_msg_new();
-    g_cc_handle.msg_tx = cc_msg_new();
-
-    timer_setup();
-}
-
-void cc_process(void)
-{
-    // process each actuator going through all assignments
-    // data update messages will be queued and sent in the next frame
-    cc_actuators_process();
 }
