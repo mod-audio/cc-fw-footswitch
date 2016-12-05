@@ -28,7 +28,7 @@ endif
 INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc
 
 # general flags
-CFLAGS += $(INC) -Wall
+CFLAGS += $(INC) -Wall -std=gnu99
 CFLAGS += -fno-builtin -ffunction-sections -fdata-sections
 # cpu related flags
 CPU_FLAGS = -mthumb -mcpu=$(CPU_CORE)
