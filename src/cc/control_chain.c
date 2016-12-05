@@ -6,12 +6,12 @@
 
 #include <stdint.h>
 #include "control_chain.h"
-#include "chip.h" // FIXME: non portable
 #include "utils.h"
 #include "msg.h"
 #include "handshake.h"
 #include "device.h"
 #include "update.h"
+#include "timer.h"
 
 
 /*
@@ -63,33 +63,6 @@ static cc_handle_t g_cc_handle;
 *       INTERNAL FUNCTIONS
 ****************************************************************************************************
 */
-
-static void timer_setup(void)
-{
-    // enable timer 1 clock
-    Chip_TIMER_Init(LPC_TIMER32_0);
-
-    // timer setup for match and interrupt
-    Chip_TIMER_Reset(LPC_TIMER32_0);
-    Chip_TIMER_MatchEnableInt(LPC_TIMER32_0, 1);
-    Chip_TIMER_ResetOnMatchEnable(LPC_TIMER32_0, 1);
-
-    // enable timer interrupt
-    NVIC_ClearPendingIRQ(TIMER_32_0_IRQn);
-    NVIC_EnableIRQ(TIMER_32_0_IRQn);
-}
-
-static void timer_set(int frame)
-{
-    Chip_TIMER_Disable(LPC_TIMER32_0);
-    Chip_TIMER_Reset(LPC_TIMER32_0);
-
-    // timer rate is system clock rate
-    uint32_t timer_freq = Chip_Clock_GetSystemClockRate();
-    Chip_TIMER_SetMatch(LPC_TIMER32_0, 1, timer_freq / (1000 / frame));
-
-    Chip_TIMER_Enable(LPC_TIMER32_0);
-}
 
 static void send(cc_handle_t *handle, const cc_msg_t *msg)
 {
@@ -192,7 +165,7 @@ static void parser(cc_handle_t *handle)
             cc_msg_parser(msg_rx, &assignment);
             cc_assignment_add(&assignment);
 
-            cc_msg_builder(CC_CMD_ASSIGNMENT, NULL, handle->msg_tx);
+            cc_msg_builder(CC_CMD_ASSIGNMENT, 0, handle->msg_tx);
             send(handle, handle->msg_tx);
         }
         else if (msg_rx->command == CC_CMD_UNASSIGNMENT)
@@ -201,10 +174,27 @@ static void parser(cc_handle_t *handle)
             cc_msg_parser(msg_rx, &assignment_id);
             cc_assignment_remove(assignment_id);
 
-            cc_msg_builder(CC_CMD_UNASSIGNMENT, NULL, handle->msg_tx);
+            cc_msg_builder(CC_CMD_UNASSIGNMENT, 0, handle->msg_tx);
             send(handle, handle->msg_tx);
         }
     }
+}
+
+static void timer_callback(void)
+{
+    cc_handle_t *handle = &g_cc_handle;
+
+    // TODO: [future/optimization] the update message shouldn't be built in the interrupt
+    // handler the time of the frame is being wasted with processing. ideally it has to be
+    // cached in the main loop and the interrupt handler is only used to queue the message
+    // (send command)
+
+    cc_updates_t *updates = cc_updates();
+    if (!updates || updates->count == 0)
+        return;
+
+    cc_msg_builder(CC_CMD_DATA_UPDATE, 0, handle->msg_tx);
+    send(handle, handle->msg_tx);
 }
 
 
@@ -214,36 +204,13 @@ static void parser(cc_handle_t *handle)
 ****************************************************************************************************
 */
 
-void TIMER32_0_IRQHandler(void)
-{
-    cc_handle_t *handle = &g_cc_handle;
-
-    if (Chip_TIMER_MatchPending(LPC_TIMER32_0, 1))
-    {
-        Chip_TIMER_ClearMatch(LPC_TIMER32_0, 1);
-        Chip_TIMER_Disable(LPC_TIMER32_0);
-
-        // TODO: [future/optimization] the update message shouldn't be built in the interrupt
-        // handler the time of the frame is being wasted with processing. ideally it has to be
-        // cached in the main loop and the interrupt handler is only used to queue the message
-        // (send command)
-
-        cc_updates_t *updates = cc_updates();
-        if (!updates || updates->count == 0)
-            return;
-
-        cc_msg_builder(CC_CMD_DATA_UPDATE, NULL, handle->msg_tx);
-        send(handle, handle->msg_tx);
-    }
-}
-
 void cc_init(void (*response_cb)(void *arg))
 {
     g_cc_handle.response_cb = response_cb;
     g_cc_handle.msg_rx = cc_msg_new();
     g_cc_handle.msg_tx = cc_msg_new();
 
-    timer_setup();
+    timer_init(timer_callback);
 }
 
 void cc_process(void)
