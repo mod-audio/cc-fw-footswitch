@@ -1,6 +1,10 @@
 #ifndef CC_DEVICE_H
 #define CC_DEVICE_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*
 ****************************************************************************************************
@@ -63,5 +67,9 @@ cc_device_t *cc_device_new(const char *name, const char *uri);
 ****************************************************************************************************
 */
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,6 +1,10 @@
 #ifndef CC_ASSIGNMENT_H
 #define CC_ASSIGNMENT_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*
 ****************************************************************************************************
@@ -64,5 +68,8 @@ cc_assignments_t *cc_assignments(void);
 ****************************************************************************************************
 */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,6 +1,10 @@
 #ifndef HANDSHAKE_H
 #define HANDSHAKE_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*
 ****************************************************************************************************
@@ -59,5 +63,8 @@ cc_handshake_t *cc_handshake_generate(string_t *uri);
 ****************************************************************************************************
 */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

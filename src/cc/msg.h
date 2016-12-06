@@ -1,6 +1,10 @@
 #ifndef CC_MSG_H
 #define CC_MSG_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*
 ****************************************************************************************************
@@ -63,5 +67,8 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg);
 ****************************************************************************************************
 */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

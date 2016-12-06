@@ -1,6 +1,10 @@
 #ifndef CONTROL_CHAIN_H
 #define CONTROL_CHAIN_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*
 ****************************************************************************************************
@@ -54,5 +58,8 @@ void cc_parse(const cc_data_t *received);
 ****************************************************************************************************
 */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
