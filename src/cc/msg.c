@@ -76,11 +76,16 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
 {
     if (msg->command == CC_CMD_HANDSHAKE)
     {
-        cc_handshake_t *handshake = data_struct;
-        handshake->random_id = *((uint16_t *) &msg->data[0]);
-        handshake->protocol.major = msg->data[2];
-        handshake->protocol.minor = msg->data[3];
-        handshake->protocol.micro = 0;
+        uint8_t *pdata = msg->data;
+        cc_handshake_mod_t *handshake = data_struct;
+
+        // random id
+        handshake->random_id = *((uint16_t *) pdata);
+        pdata += sizeof(uint16_t);
+
+        handshake->status = *pdata++;
+        handshake->address = *pdata++;
+        handshake->channel = *pdata++;
     }
     else if (msg->command == CC_CMD_ASSIGNMENT)
     {
@@ -112,12 +117,26 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
     if (command == CC_CMD_HANDSHAKE)
     {
         const cc_handshake_t *handshake = data_struct;
-        uint16_t *random_id = (uint16_t *) &msg->data[0];
-        *random_id = handshake->random_id;
-        msg->data[2] = handshake->protocol.major;
-        msg->data[3] = handshake->protocol.minor;
+        uint8_t *pdata = msg->data;
 
-        msg->data_size = 4;
+        // serialize uri
+        pdata += string_serialize(handshake->uri, pdata);
+
+        // random id
+        uint16_t *random_id = (uint16_t *) pdata;
+        *random_id = handshake->random_id;
+        pdata += sizeof(uint16_t);
+
+        // protocol version
+        *pdata++ = handshake->protocol.major;
+        *pdata++ = handshake->protocol.minor;
+
+        // firmware version
+        *pdata++ = handshake->firmware.major;
+        *pdata++ = handshake->firmware.minor;
+        *pdata++ = handshake->firmware.micro;
+
+        msg->data_size = (pdata - msg->data);
     }
     else if (command == CC_CMD_DEV_DESCRIPTOR)
     {

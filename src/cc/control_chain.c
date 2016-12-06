@@ -49,8 +49,7 @@ typedef struct cc_handle_t {
     void (*response_cb)(void *arg);
     int comm_state, msg_state;
     cc_msg_t *msg_rx, *msg_tx;
-    uint8_t address;
-    cc_handshake_t *handshake;
+    int address;
 } cc_handle_t;
 
 
@@ -61,6 +60,7 @@ typedef struct cc_handle_t {
 */
 
 static cc_handle_t g_cc_handle;
+static cc_device_t *g_device;
 
 
 /*
@@ -121,10 +121,11 @@ static void parser(cc_handle_t *handle)
             if (sync_cycle != CC_SYNC_HANDSHAKE_CYCLE)
                 return;
 
-            handle->handshake = cc_handshake();
+            // generate handshake
+            g_device->handshake = cc_handshake_generate(g_device->uri);
 
             // build and send handshake message
-            cc_msg_builder(CC_CMD_HANDSHAKE, handle->handshake, handle->msg_tx);
+            cc_msg_builder(CC_CMD_HANDSHAKE, g_device->handshake, handle->msg_tx);
             send(handle, handle->msg_tx);
 
             handle->comm_state++;
@@ -134,14 +135,15 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_HANDSHAKE)
         {
-            cc_handshake_t handshake;
+            cc_handshake_mod_t handshake;
             cc_msg_parser(msg_rx, &handshake);
 
             // check whether master replied to this device
-            if (handle->handshake->random_id == handshake.random_id)
+            if (g_device->handshake->random_id == handshake.random_id)
             {
-                // TODO: check protocol version
-                handle->address = msg_rx->dev_address;
+                // TODO: check status
+                // TODO: handle channel
+                handle->address = handshake.address;
                 handle->comm_state++;
             }
         }
@@ -150,10 +152,8 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_DEV_DESCRIPTOR)
         {
-            cc_dev_descriptor_t *desc;
-            desc = cc_device_descriptor("FootEx");
-
-            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, desc, handle->msg_tx);
+            // build and send device descriptor message
+            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, &g_device->descriptor, handle->msg_tx);
             send(handle, handle->msg_tx);
 
             // device assumes message was successfully delivered
@@ -219,6 +219,8 @@ void cc_init(void (*response_cb)(void *arg))
     g_cc_handle.response_cb = response_cb;
     g_cc_handle.msg_rx = cc_msg_new();
     g_cc_handle.msg_tx = cc_msg_new();
+
+    g_device = cc_device_new("FootEx", "uri:FootEx");
 
     timer_init(timer_callback);
 }

@@ -33,9 +33,15 @@
 */
 
 typedef struct cc_handshake_t {
+    string_t *uri;
     uint16_t random_id;
-    version_t protocol;
+    version_t protocol, firmware;
 } cc_handshake_t;
+
+typedef struct cc_handshake_mod_t {
+    uint16_t random_id;
+    int status, address, channel;
+} cc_handshake_mod_t;
 
 
 /*
@@ -44,7 +50,7 @@ typedef struct cc_handshake_t {
 ****************************************************************************************************
 */
 
-cc_handshake_t *cc_handshake(void);
+cc_handshake_t *cc_handshake_generate(string_t *uri);
 
 
 /*
