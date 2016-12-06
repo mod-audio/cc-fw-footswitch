@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "utils.h"
+#include "handshake.h"
 #include "actuator.h"
 
 
@@ -26,6 +27,8 @@
 ****************************************************************************************************
 */
 
+#define CC_MAX_DEVICES  1
+
 
 /*
 ****************************************************************************************************
@@ -38,6 +41,12 @@ typedef struct cc_dev_descriptor_t {
     cc_actuators_t *actuators;
 } cc_dev_descriptor_t;
 
+typedef struct cc_device_t {
+    string_t *uri;
+    cc_handshake_t *handshake;
+    cc_dev_descriptor_t *descriptor;
+} cc_device_t;
+
 
 /*
 ****************************************************************************************************
@@ -45,7 +54,7 @@ typedef struct cc_dev_descriptor_t {
 ****************************************************************************************************
 */
 
-cc_dev_descriptor_t *cc_device_descriptor(const char *device_name);
+cc_device_t *cc_device_new(const char *name, const char *uri);
 
 
 /*

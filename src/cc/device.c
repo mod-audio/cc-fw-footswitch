@@ -34,6 +34,10 @@
 ****************************************************************************************************
 */
 
+static int devices_count;
+static cc_device_t g_devices[CC_MAX_DEVICES];
+static cc_dev_descriptor_t g_descriptors[CC_MAX_DEVICES];
+
 
 /*
 ****************************************************************************************************
@@ -48,12 +52,19 @@
 ****************************************************************************************************
 */
 
-cc_dev_descriptor_t *cc_device_descriptor(const char *device_name)
+cc_device_t *cc_device_new(const char *name, const char *uri)
 {
-    static cc_dev_descriptor_t dev_descriptor;
+    if (devices_count >= CC_MAX_DEVICES)
+        return 0;
 
-    dev_descriptor.label = string_create(device_name);
-    dev_descriptor.actuators = cc_actuators();
+    cc_device_t *device = &g_devices[devices_count];
+    device->uri = string_create(uri);
 
-    return &dev_descriptor;
+    device->descriptor = &g_descriptors[devices_count];
+    device->descriptor->label = string_create(name);
+    device->descriptor->actuators = cc_actuators();
+
+    devices_count++;
+
+    return device;
 }
