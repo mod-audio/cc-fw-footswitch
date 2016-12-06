@@ -30,8 +30,6 @@
 ****************************************************************************************************
 */
 
-// communication states
-enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQUESTS};
 
 
 /*
@@ -40,6 +38,13 @@ enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQU
 ****************************************************************************************************
 */
 
+// communication states
+enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQUESTS};
+
+// sync message cycles definition
+enum {CC_SYNC_REGULAR_CYCLE, CC_SYNC_HANDSHAKE_CYCLE};
+
+// control chain handle struct
 typedef struct cc_handle_t {
     void (*response_cb)(void *arg);
     int comm_state, msg_state;
@@ -111,6 +116,11 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
+            // check if it's handshake sync cycle
+            int sync_cycle = msg_rx->data[0];
+            if (sync_cycle != CC_SYNC_HANDSHAKE_CYCLE)
+                return;
+
             handle->handshake = cc_handshake();
 
             // build and send handshake message
@@ -283,19 +293,11 @@ void cc_parse(const cc_data_t *received)
                 data_size |= msg->data_size;
                 msg->data_size = data_size;
 
-                // sync message must have no data
-                if (msg->command == CC_CMD_CHAIN_SYNC && data_size > 0)
-                {
-                    handle->msg_state = 0;
-                }
-                else
-                {
-                    handle->msg_state++;
+                handle->msg_state++;
 
-                    // if no data is expected skip data retrieving step
-                    if (data_size == 0)
-                        handle->msg_state++;
-                }
+                // if no data is expected skip data retrieving step
+                if (data_size == 0)
+                    handle->msg_state++;
                 break;
 
             // data
