@@ -73,10 +73,6 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
 {
     uint8_t *buffer = handle->msg_tx->header;
 
-    // add sync byte
-    buffer[0] = SYNC_BYTE;
-    buffer++;
-
     // header
     uint32_t i = 0;
     buffer[i++] = handle->address;
@@ -101,10 +97,16 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
     // calculate crc
     buffer[i++] = crc8(buffer, CC_MSG_HEADER_SIZE + msg->data_size);
 
-    // send message
+    // send sync byte
+    uint8_t sync = SYNC_BYTE;
     cc_data_t response;
+    response.data = &sync;
+    response.size = 1;
+    handle->response_cb(&response);
+
+    // send message
     response.data = buffer;
-    response.size = i + 1;
+    response.size = i;
     handle->response_cb(&response);
 }
 
