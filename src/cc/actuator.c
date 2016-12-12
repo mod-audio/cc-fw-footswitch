@@ -15,8 +15,6 @@
 ****************************************************************************************************
 */
 
-#define MAX_ACTUATORS   4
-
 
 /*
 ****************************************************************************************************
@@ -39,7 +37,7 @@
 */
 
 static cc_actuators_t *g_actuators = 0;
-static cc_actuator_t g_actuators_cache[MAX_ACTUATORS];
+static cc_actuator_t g_actuators_cache[CC_MAX_ACTUATORS];
 static unsigned int g_actuators_count;
 
 
@@ -105,7 +103,7 @@ cc_actuator_t *cc_actuator_new(volatile float *var)
     if (!g_actuators)
         g_actuators = lili_create();
 
-    if (g_actuators_count >= MAX_ACTUATORS)
+    if (g_actuators_count >= CC_MAX_ACTUATORS)
         return 0;
 
     cc_actuator_t *actuator = &g_actuators_cache[g_actuators_count];
