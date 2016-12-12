@@ -89,17 +89,22 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
     }
     else if (msg->command == CC_CMD_ASSIGNMENT)
     {
+        uint8_t *pdata = msg->data;
         cc_assignment_t *assignment = data_struct;
 
-        int i = 0;
-        assignment->id = msg->data[i++];
-        assignment->actuator_id = msg->data[i++];
+        // assignment id, actuator id
+        assignment->id = *pdata++;
+        assignment->actuator_id = *pdata++;
 
-        i += bytes_to_float(&msg->data[i], &assignment->value);
-        i += bytes_to_float(&msg->data[i], &assignment->min);
-        i += bytes_to_float(&msg->data[i], &assignment->max);
-        i += bytes_to_float(&msg->data[i], &assignment->def);
-        assignment->mode = msg->data[i++];
+        // value, min, max, def
+        pdata += bytes_to_float(pdata, &assignment->value);
+        pdata += bytes_to_float(pdata, &assignment->min);
+        pdata += bytes_to_float(pdata, &assignment->max);
+        pdata += bytes_to_float(pdata, &assignment->def);
+
+        // mode
+        assignment->mode = *((uint32_t *) pdata);
+        pdata += sizeof(uint32_t);
     }
     else if (msg->command == CC_CMD_UNASSIGNMENT)
     {
