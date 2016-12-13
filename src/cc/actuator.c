@@ -47,30 +47,41 @@ static unsigned int g_actuators_count;
 ****************************************************************************************************
 */
 
+static int momentary_process(cc_actuator_t *actuator, cc_assignment_t *assignment)
+{
+    float actuator_value = *(actuator->value);
+    if (actuator_value > 0.0)
+    {
+        if (actuator->lock == 0)
+        {
+            actuator->lock = 1;
+
+            if (assignment->mode & CC_MODE_TOGGLE)
+            {
+                assignment->value = 1.0 - assignment->value;
+            }
+            else if (assignment->mode & CC_MODE_TRIGGER)
+            {
+                assignment->value = 1.0;
+            }
+
+            return 1;
+        }
+    }
+    else
+    {
+        actuator->lock = 0;
+    }
+
+    return 0;
+}
+
 static int update_assignment_value(cc_actuator_t *actuator, cc_assignment_t *assignment)
 {
-    if (assignment->mode & (CC_MODE_TOGGLE | CC_MODE_TRIGGER))
+    switch (actuator->type)
     {
-        float actuator_value = *(actuator->value);
-
-        if (actuator_value > 0.0)
-        {
-            if (actuator->lock == 0)
-            {
-                actuator->lock = 1;
-
-                if (assignment->mode & CC_MODE_TOGGLE)
-                    assignment->value = 1.0 - assignment->value;
-                else
-                    assignment->value = 1.0;
-
-                return 1;
-            }
-        }
-        else
-        {
-            actuator->lock = 0;
-        }
+        case CC_ACTUATOR_MOMENTARY:
+            return momentary_process(actuator, assignment);
     }
 
 #if 0
@@ -98,7 +109,7 @@ static int update_assignment_value(cc_actuator_t *actuator, cc_assignment_t *ass
 ****************************************************************************************************
 */
 
-cc_actuator_t *cc_actuator_new(volatile float *var)
+cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max)
 {
     if (!g_actuators)
         g_actuators = lili_create();
@@ -110,11 +121,10 @@ cc_actuator_t *cc_actuator_new(volatile float *var)
 
     // initialize actuator data struct
     actuator->id = g_actuators_count;
-
-    // FIXME: for initial tests
-    actuator->min = 0.0;
-    actuator->max = 1.0;
+    actuator->type = type;
     actuator->value = var;
+    actuator->min = min;
+    actuator->max = max;
 
     // append new actuator to actuators list
     lili_push(g_actuators, actuator);

@@ -39,10 +39,12 @@ extern "C"
 ****************************************************************************************************
 */
 
+enum {CC_ACTUATOR_CONTINUOUS, CC_ACTUATOR_DISCRETE, CC_ACTUATOR_SWITCH, CC_ACTUATOR_MOMENTARY};
+
 typedef lili_t cc_actuators_t;
 
 typedef struct cc_actuator_t {
-    int id;
+    int id, type;
     volatile float *value;
     float min, max;
     cc_assignment_t *assignment;
@@ -57,7 +59,7 @@ typedef struct cc_actuator_t {
 */
 
 // create a new actuator object
-cc_actuator_t *cc_actuator_new(volatile float *var);
+cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max);
 // map assignment to actuator
 void cc_actuator_map(cc_assignment_t *assignment);
 // unmap assignment from actuator

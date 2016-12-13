@@ -74,11 +74,11 @@ int main(void)
     g_serial = serial_init(BAUD_RATE, serial_recv);
     cc_init(response_cb);
 
-    static volatile float foots[4];
+    static float foots[4];
 
     for (int i = 0; i < 4; i++)
     {
-        cc_actuator_new(&foots[i]);
+        cc_actuator_new(CC_ACTUATOR_MOMENTARY, &foots[i], 0, 1);
     }
 
     while (1)
