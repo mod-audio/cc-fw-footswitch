@@ -34,7 +34,6 @@
 ****************************************************************************************************
 */
 
-static int devices_count;
 static cc_device_t g_devices[CC_MAX_DEVICES];
 static cc_dev_descriptor_t g_descriptors[CC_MAX_DEVICES];
 
@@ -54,6 +53,8 @@ static cc_dev_descriptor_t g_descriptors[CC_MAX_DEVICES];
 
 cc_device_t *cc_device_new(const char *name, const char *uri)
 {
+    static int devices_count;
+
     if (devices_count >= CC_MAX_DEVICES)
         return 0;
 

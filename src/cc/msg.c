@@ -103,13 +103,18 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         pdata += bytes_to_float(pdata, &assignment->def);
 
         // mode
-        assignment->mode = *((uint32_t *) pdata);
-        pdata += sizeof(uint32_t);
+        uint8_t *pmode = (uint8_t *) &assignment->mode;
+        *pmode++ = *pdata++;
+        *pmode++ = *pdata++;
+        *pmode++ = *pdata++;
+        *pmode++ = *pdata++;
     }
     else if (msg->command == CC_CMD_UNASSIGNMENT)
     {
+        uint8_t *pdata = msg->data;
         uint8_t *assignment_id = data_struct;
-        *assignment_id = msg->data[0];
+
+        *assignment_id = *pdata++;
     }
 
     return 0;
@@ -128,9 +133,9 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         pdata += string_serialize(handshake->uri, pdata);
 
         // random id
-        uint16_t *random_id = (uint16_t *) pdata;
-        *random_id = handshake->random_id;
-        pdata += sizeof(uint16_t);
+        uint8_t *pvalue = (uint8_t *) &handshake->random_id;
+        *pdata++ = *pvalue++;
+        *pdata++ = *pvalue++;
 
         // protocol version
         *pdata++ = handshake->protocol.major;
