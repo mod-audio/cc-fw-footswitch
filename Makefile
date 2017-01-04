@@ -40,7 +40,7 @@ CFLAGS += -DCORE_M0
 MAP_FILE = $(OUT_DIR)/$(PROJECT).map
 LINKER_FILE = $(SRC_DIR)/cpu/$(CPU_SERIES)/$(CPU).ld
 LDFLAGS += -nostdlib -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE) -Xlinker --gc-sections
-LDFLAGS += $(CPU_FLAGS) -specs=rdimon.specs
+LDFLAGS += $(CPU_FLAGS) -specs=nano.specs
 LDFLAGS += -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group
 
 # libraries
