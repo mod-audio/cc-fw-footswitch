@@ -63,7 +63,7 @@ cc_device_t *cc_device_new(const char *name, const char *uri)
 
     device->descriptor = &g_descriptors[devices_count];
     device->descriptor->label = string_create(name);
-    device->descriptor->actuators = cc_actuators();
+    device->descriptor->actuators = cc_actuators(0);
 
     devices_count++;
 

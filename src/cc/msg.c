@@ -156,12 +156,16 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         // serialize label
         pdata += string_serialize(desc->label, pdata);
 
+        unsigned int count;
+        cc_actuator_t **actuators = cc_actuators(&count);
+
+        // number of actuators
+        *pdata++ = count;
+
         // serialize actuators data
-        cc_actuators_t *actuators = cc_actuators();
-        *pdata++ = actuators->count;
-        LILI_FOREACH(actuators, node)
+        for (int i = 0; i < count; i++)
         {
-            cc_actuator_t *actuator = node->data;
+            cc_actuator_t *actuator = actuators[i];
             *pdata++ = actuator->id;
         }
 

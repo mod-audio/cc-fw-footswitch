@@ -42,7 +42,7 @@ extern "C"
 
 typedef struct cc_dev_descriptor_t {
     string_t *label;
-    cc_actuators_t *actuators;
+    cc_actuator_t **actuators;
 } cc_dev_descriptor_t;
 
 typedef struct cc_device_t {

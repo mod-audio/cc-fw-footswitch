@@ -36,8 +36,7 @@
 ****************************************************************************************************
 */
 
-static cc_actuators_t *g_actuators = 0;
-static cc_actuator_t g_actuators_cache[CC_MAX_ACTUATORS];
+static cc_actuator_t g_actuators[CC_MAX_ACTUATORS];
 static unsigned int g_actuators_count;
 
 
@@ -111,13 +110,10 @@ static int update_assignment_value(cc_actuator_t *actuator, cc_assignment_t *ass
 
 cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max)
 {
-    if (!g_actuators)
-        g_actuators = lili_create();
-
     if (g_actuators_count >= CC_MAX_ACTUATORS)
         return 0;
 
-    cc_actuator_t *actuator = &g_actuators_cache[g_actuators_count];
+    cc_actuator_t *actuator = &g_actuators[g_actuators_count];
 
     // initialize actuator data struct
     actuator->id = g_actuators_count;
@@ -125,9 +121,6 @@ cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max)
     actuator->value = var;
     actuator->min = min;
     actuator->max = max;
-
-    // append new actuator to actuators list
-    lili_push(g_actuators, actuator);
     g_actuators_count++;
 
     return actuator;
@@ -135,9 +128,9 @@ cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max)
 
 void cc_actuator_map(cc_assignment_t *assignment)
 {
-    LILI_FOREACH(g_actuators, node)
+    for (int i = 0; i < g_actuators_count; i++)
     {
-        cc_actuator_t *actuator = node->data;
+        cc_actuator_t *actuator = &g_actuators[i];
         if (actuator->id == assignment->actuator_id)
         {
             actuator->assignment = assignment;
@@ -148,9 +141,9 @@ void cc_actuator_map(cc_assignment_t *assignment)
 
 void cc_actuator_unmap(cc_assignment_t *assignment)
 {
-    LILI_FOREACH(g_actuators, node)
+    for (int i = 0; i < g_actuators_count; i++)
     {
-        cc_actuator_t *actuator = node->data;
+        cc_actuator_t *actuator = &g_actuators[i];
         if (actuator->id == assignment->actuator_id)
         {
             actuator->assignment = 0;
@@ -159,16 +152,26 @@ void cc_actuator_unmap(cc_assignment_t *assignment)
     }
 }
 
-cc_actuators_t *cc_actuators(void)
+cc_actuator_t **cc_actuators(unsigned int *n_actuators)
 {
-    return g_actuators;
+    static cc_actuator_t *actuators[CC_MAX_ACTUATORS+1];
+
+    for (int i = 0; i < g_actuators_count; i++)
+        actuators[i] = &g_actuators[i];
+
+    actuators[g_actuators_count] = 0;
+
+    if (n_actuators)
+        *n_actuators = g_actuators_count;
+
+    return actuators;
 }
 
 void cc_actuators_process(void)
 {
-    LILI_FOREACH(g_actuators, node)
+    for (int i = 0; i < g_actuators_count; i++)
     {
-        cc_actuator_t *actuator = node->data;
+        cc_actuator_t *actuator = &g_actuators[i];
         cc_assignment_t *assignment = actuator->assignment;
 
         if (!assignment)

@@ -13,7 +13,6 @@ extern "C"
 */
 
 #include <stdint.h>
-#include "lili.h"
 #include "assignment.h"
 
 
@@ -41,8 +40,6 @@ extern "C"
 
 enum {CC_ACTUATOR_CONTINUOUS, CC_ACTUATOR_DISCRETE, CC_ACTUATOR_SWITCH, CC_ACTUATOR_MOMENTARY};
 
-typedef lili_t cc_actuators_t;
-
 typedef struct cc_actuator_t {
     int id, type;
     volatile float *value;
@@ -65,7 +62,7 @@ void cc_actuator_map(cc_assignment_t *assignment);
 // unmap assignment from actuator
 void cc_actuator_unmap(cc_assignment_t *assignment);
 // return a list with all created actuators
-cc_actuators_t *cc_actuators(void);
+cc_actuator_t **cc_actuators(unsigned int *n_actuators);
 // process the assignments of all created actuators
 void cc_actuators_process(void);
 
