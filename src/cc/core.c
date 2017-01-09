@@ -9,8 +9,6 @@
 #include "utils.h"
 #include "msg.h"
 #include "handshake.h"
-#include "device.h"
-#include "update.h"
 #include "timer.h"
 
 
@@ -155,7 +153,7 @@ static void parser(cc_handle_t *handle)
         if (msg_rx->command == CC_CMD_DEV_DESCRIPTOR)
         {
             // build and send device descriptor message
-            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, g_device->descriptor, handle->msg_tx);
+            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, g_device, handle->msg_tx);
             send(handle, handle->msg_tx);
 
             // device assumes message was successfully delivered
