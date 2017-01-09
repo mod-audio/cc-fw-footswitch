@@ -8,6 +8,8 @@
 ****************************************************************************************************
 */
 
+#include <stdint.h>
+
 
 /*
 ****************************************************************************************************
@@ -62,6 +64,7 @@ enum {BUTTON_RELEASED, BUTTON_PRESSED};
 void hw_init(void);
 int hw_button(int button);
 void hw_led(int led, int color, int value);
+uint32_t hw_uptime(void);
 
 
 /*

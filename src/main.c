@@ -52,6 +52,28 @@ static float g_foot_value[FOOTSWITCHES_COUNT];
 ****************************************************************************************************
 */
 
+static void welcome_message(void)
+{
+    // message display 1
+    clcd_cursor_set(0, CLCD_LINE1, 0);
+    clcd_print(0, "MOD DEVICES");
+    clcd_cursor_set(0, CLCD_LINE2, 0);
+    clcd_print(0, "CONTROL CHAIN");
+
+    // message display 2
+    clcd_cursor_set(1, CLCD_LINE1, 0);
+    clcd_print(1, "FOOTSWITCH EXT.");
+    clcd_cursor_set(1, CLCD_LINE2, 0);
+    clcd_print(1, "FW VER: 0.0.0");
+
+    // wait until user to see the message
+    delay_ms(3000);
+
+    // clear displays
+    clcd_clear(0);
+    clcd_clear(1);
+}
+
 static void serial_recv(void *arg)
 {
     cc_data_t *data = arg;
@@ -107,6 +129,8 @@ int main(void)
 {
     hw_init();
     g_serial = serial_init(BAUD_RATE, serial_recv);
+
+    welcome_message();
 
     // init and create device
     cc_init(response_cb);

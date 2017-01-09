@@ -6,6 +6,7 @@
 
 #include "delay.h"
 #include "chip.h"
+#include "hardware.h"
 
 
 /*
@@ -72,4 +73,10 @@ inline void delay_us(uint32_t us)
         : "+r" (n) :
     );
     asm(".syntax divided");
+}
+
+void delay_ms(uint32_t ms)
+{
+    uint32_t start = hw_uptime();
+    while ((hw_uptime() - start) < ms);
 }

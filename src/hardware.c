@@ -4,9 +4,8 @@
 ****************************************************************************************************
 */
 
-#include <stdint.h>
-#include "chip.h"
 #include "hardware.h"
+#include "chip.h"
 #include "gpio.h"
 #include "delay.h"
 #include "clcd.h"
@@ -55,6 +54,7 @@ static const gpio_t g_buttons_gpio[] = {BUTTONS_PINS};
 static const gpio_t g_leds_gpio[] = {LEDS_PINS};
 static const gpio_t g_backlights_gpio[] = {BACKLIGHTS_PINS};
 static button_t g_buttons[N_BUTTONS];
+static uint32_t g_counter;
 
 
 /*
@@ -66,6 +66,8 @@ static button_t g_buttons[N_BUTTONS];
 // buttons process
 void SysTick_Handler(void)
 {
+    g_counter++;
+
     for (int i = 0; i < N_BUTTONS; i++)
     {
         const gpio_t *gpio = &g_buttons_gpio[i];
@@ -146,16 +148,6 @@ void hw_init(void)
     clcd_init(CLCD_4BIT | CLCD_2LINE, &lcd1_gpio);
     clcd_init(CLCD_4BIT | CLCD_2LINE, &lcd2_gpio);
 
-    clcd_cursor_set(0, CLCD_LINE1, 0);
-    clcd_print(0, "MOD DEVICES");
-    clcd_cursor_set(0, CLCD_LINE2, 0);
-    clcd_print(0, "CONTROL CHAIN");
-
-    clcd_cursor_set(1, CLCD_LINE1, 0);
-    clcd_print(1, "FOOTSWITCH EXT.");
-    clcd_cursor_set(1, CLCD_LINE2, 0);
-    clcd_print(1, "FW VER: 0.0.0");
-
     // backlights
     for (int i = 0; i < N_BACKLIGHTS; i++)
     {
@@ -185,4 +177,9 @@ void hw_led(int led, int color, int value)
         Chip_GPIO_SetPinState(LPC_GPIO, l->port, l->pin, 0);
     else if (value == LED_TOGGLE)
         Chip_GPIO_SetPinToggle(LPC_GPIO, l->port, l->pin);
+}
+
+inline uint32_t hw_uptime(void)
+{
+    return g_counter;
 }
