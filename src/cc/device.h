@@ -31,8 +31,6 @@ extern "C"
 ****************************************************************************************************
 */
 
-#define CC_MAX_DEVICES  1
-
 
 /*
 ****************************************************************************************************
@@ -40,15 +38,11 @@ extern "C"
 ****************************************************************************************************
 */
 
-typedef struct cc_dev_descriptor_t {
-    string_t *label;
-    cc_actuator_t **actuators;
-} cc_dev_descriptor_t;
-
 typedef struct cc_device_t {
-    string_t *uri;
+    string_t *uri, *label;
     cc_handshake_t *handshake;
-    cc_dev_descriptor_t *descriptor;
+    cc_actuator_t **actuators;
+    unsigned int actuators_count;
 } cc_device_t;
 
 
@@ -58,7 +52,12 @@ typedef struct cc_device_t {
 ****************************************************************************************************
 */
 
+// create a new device
 cc_device_t *cc_device_new(const char *name, const char *uri);
+// add actuator to device actuators list
+void cc_device_actuator_add(cc_device_t *device, cc_actuator_t *actuator);
+// return a device object (only one device is supported)
+cc_device_t *cc_device_get(void);
 
 
 /*

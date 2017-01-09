@@ -6,9 +6,8 @@
 
 #include "hardware.h"
 #include "serial.h"
+#include "clcd.h"
 #include "control_chain.h"
-#include "actuator.h"
-#include "update.h"
 
 
 /*
@@ -17,7 +16,8 @@
 ****************************************************************************************************
 */
 
-#define BAUD_RATE 115200
+#define BAUD_RATE           115200
+#define FOOTSWITCHES_COUNT  4
 
 
 /*
@@ -41,6 +41,7 @@
 */
 
 static serial_t *g_serial;
+static float g_foot_value[FOOTSWITCHES_COUNT];
 
 
 /*
@@ -72,13 +73,17 @@ int main(void)
 {
     hw_init();
     g_serial = serial_init(BAUD_RATE, serial_recv);
+
     cc_init(response_cb);
+    cc_device_t *device = cc_device_new("FootEx", "uri:FootEx");
 
-    static float foots[4];
-
-    for (int i = 0; i < 4; i++)
+    // create actuators
+    for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
     {
-        cc_actuator_new(CC_ACTUATOR_MOMENTARY, &foots[i], 0, 1);
+        cc_actuator_t *actuator =
+            cc_actuator_new(CC_ACTUATOR_MOMENTARY, &g_foot_value[i], 0, 1);
+
+        cc_device_actuator_add(device, actuator);
     }
 
     while (1)
@@ -88,11 +93,11 @@ int main(void)
             int button_status = hw_button(i);
             if (button_status == BUTTON_PRESSED)
             {
-                foots[i] = 1.0;
+                g_foot_value[i] = 1.0;
             }
             else if (button_status == BUTTON_RELEASED)
             {
-                foots[i] = 0.0;
+                g_foot_value[i] = 0.0;
             }
         }
 

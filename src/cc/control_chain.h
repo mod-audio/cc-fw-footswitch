@@ -13,6 +13,9 @@ extern "C"
 */
 
 #include <stdint.h>
+#include "device.h"
+#include "actuator.h"
+#include "update.h"
 
 
 /*

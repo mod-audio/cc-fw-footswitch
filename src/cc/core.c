@@ -47,7 +47,7 @@ typedef struct cc_handle_t {
     void (*response_cb)(void *arg);
     int comm_state, msg_state;
     cc_msg_t *msg_rx, *msg_tx;
-    int address;
+    int device_id;
 } cc_handle_t;
 
 
@@ -58,7 +58,6 @@ typedef struct cc_handle_t {
 */
 
 static cc_handle_t g_cc_handle;
-static cc_device_t *g_device;
 
 
 /*
@@ -73,7 +72,7 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
 
     // header
     uint32_t i = 0;
-    buffer[i++] = handle->address;
+    buffer[i++] = handle->device_id;
     buffer[i++] = msg->command;
     buffer[i++] = (msg->data_size >> 0) & 0xFF;
     buffer[i++] = (msg->data_size >> 8) & 0xFF;
@@ -112,6 +111,10 @@ static void parser(cc_handle_t *handle)
 {
     cc_msg_t *msg_rx = handle->msg_rx;
 
+    cc_device_t *device = cc_device_get();
+    if (!device)
+        return;
+
     if (handle->comm_state == WAITING_SYNCING)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
@@ -122,10 +125,10 @@ static void parser(cc_handle_t *handle)
                 return;
 
             // generate handshake
-            g_device->handshake = cc_handshake_generate(g_device->uri);
+            device->handshake = cc_handshake_generate(device->uri);
 
             // build and send handshake message
-            cc_msg_builder(CC_CMD_HANDSHAKE, g_device->handshake, handle->msg_tx);
+            cc_msg_builder(CC_CMD_HANDSHAKE, device->handshake, handle->msg_tx);
             send(handle, handle->msg_tx);
 
             handle->comm_state++;
@@ -139,11 +142,11 @@ static void parser(cc_handle_t *handle)
             cc_msg_parser(msg_rx, &handshake);
 
             // check whether master replied to this device
-            if (g_device->handshake->random_id == handshake.random_id)
+            if (device->handshake->random_id == handshake.random_id)
             {
                 // TODO: check status
                 // TODO: handle channel
-                handle->address = handshake.address;
+                handle->device_id = handshake.device_id;
                 handle->comm_state++;
             }
         }
@@ -153,7 +156,7 @@ static void parser(cc_handle_t *handle)
         if (msg_rx->command == CC_CMD_DEV_DESCRIPTOR)
         {
             // build and send device descriptor message
-            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, g_device, handle->msg_tx);
+            cc_msg_builder(CC_CMD_DEV_DESCRIPTOR, device, handle->msg_tx);
             send(handle, handle->msg_tx);
 
             // device assumes message was successfully delivered
@@ -164,10 +167,10 @@ static void parser(cc_handle_t *handle)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
-            // device address is used to define the communication frame
+            // device id is used to define the communication frame
             // timer is reseted each sync message
             if (cc_assignments())
-                timer_set(handle->address);
+                timer_set(handle->device_id);
         }
         else if (msg_rx->command == CC_CMD_ASSIGNMENT)
         {
@@ -220,8 +223,6 @@ void cc_init(void (*response_cb)(void *arg))
     g_cc_handle.msg_rx = cc_msg_new();
     g_cc_handle.msg_tx = cc_msg_new();
 
-    g_device = cc_device_new("FootEx", "uri:FootEx");
-
     timer_init(timer_callback);
 }
 
@@ -261,13 +262,14 @@ void cc_parse(const cc_data_t *received)
                 }
                 break;
 
-            // address
+            // device id
             case 1:
+                // check if it's messaging this device or a broadcast message
                 if (byte == BROADCAST_ADDRESS ||
-                    byte == handle->address   ||
-                    handle->address == BROADCAST_ADDRESS)
+                    handle->device_id == byte ||
+                    handle->device_id == BROADCAST_ADDRESS)
                 {
-                    msg->dev_address = byte;
+                    msg->device_id = byte;
                     handle->msg_state++;
                 }
                 else

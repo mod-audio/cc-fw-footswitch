@@ -84,7 +84,7 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         pdata += sizeof(uint16_t);
 
         handshake->status = *pdata++;
-        handshake->address = *pdata++;
+        handshake->device_id = *pdata++;
         handshake->channel = *pdata++;
     }
     else if (msg->command == CC_CMD_ASSIGNMENT)
@@ -153,22 +153,19 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
     }
     else if (command == CC_CMD_DEV_DESCRIPTOR)
     {
-        const cc_dev_descriptor_t *desc = data_struct;
+        const cc_device_t *device = data_struct;
         uint8_t *pdata = msg->data;
 
         // serialize label
-        pdata += string_serialize(desc->label, pdata);
-
-        unsigned int count;
-        cc_actuator_t **actuators = cc_actuators(&count);
+        pdata += string_serialize(device->label, pdata);
 
         // number of actuators
-        *pdata++ = count;
+        *pdata++ = device->actuators_count;
 
         // serialize actuators data
-        for (int i = 0; i < count; i++)
+        for (unsigned int i = 0; i < device->actuators_count; i++)
         {
-            cc_actuator_t *actuator = actuators[i];
+            cc_actuator_t *actuator = device->actuators[i];
             *pdata++ = actuator->id;
         }
 
