@@ -36,6 +36,11 @@ typedef struct string_t {
     char *text;
 } string_t;
 
+typedef struct str16_t {
+    uint8_t size;
+    char text[17];
+} str16_t;
+
 typedef struct version_t {
     uint8_t major, minor, micro;
 } version_t;
@@ -58,6 +63,7 @@ uint8_t crc8(const uint8_t *data, uint32_t len);
 string_t *string_create(const char *str);
 uint8_t string_serialize(const string_t *str, uint8_t *buffer);
 string_t *string_deserialize(const uint8_t *data, uint32_t *written);
+uint8_t str16_deserialize(const uint8_t *data, str16_t *str);
 void string_destroy(string_t *str);
 
 int bytes_to_float(const uint8_t *array, float *pvar);

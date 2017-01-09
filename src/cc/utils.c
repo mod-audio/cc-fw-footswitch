@@ -154,6 +154,25 @@ string_t *string_deserialize(const uint8_t *data, uint32_t *written)
     return str;
 }
 
+uint8_t str16_deserialize(const uint8_t *data, str16_t *str)
+{
+    uint8_t written = 0;
+
+    if (str)
+    {
+        str->size = *data++;
+
+        if (str->size > 16)
+            str->size = 16;
+
+        memcpy(str->text, (char *) data, str->size);
+        str->text[str->size] = 0;
+        written = str->size + 1;
+    }
+
+    return written;
+}
+
 void string_destroy(string_t *str)
 {
     if (str)

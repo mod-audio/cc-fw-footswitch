@@ -96,6 +96,9 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         assignment->id = *pdata++;
         assignment->actuator_id = *pdata++;
 
+        // assignment label
+        pdata += str16_deserialize(pdata, &assignment->label);
+
         // value, min, max, def
         pdata += bytes_to_float(pdata, &assignment->value);
         pdata += bytes_to_float(pdata, &assignment->min);

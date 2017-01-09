@@ -14,6 +14,7 @@ extern "C"
 
 #include <stdint.h>
 #include "lili.h"
+#include "utils.h"
 
 
 /*
@@ -43,6 +44,7 @@ typedef lili_t cc_assignments_t;
 
 typedef struct cc_assignment_t {
     int id, actuator_id;
+    str16_t label;
     float value, min, max, def;
     uint32_t mode;
 } cc_assignment_t;

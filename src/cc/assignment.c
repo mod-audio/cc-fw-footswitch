@@ -4,6 +4,7 @@
 ****************************************************************************************************
 */
 
+#include <string.h>
 #include "assignment.h"
 #include "device.h"
 
@@ -77,6 +78,7 @@ void cc_assignment_add(cc_assignment_t *assignment)
             cache->min = assignment->min;
             cache->max = assignment->max;
             cache->mode = assignment->mode;
+            memcpy(&cache->label, &assignment->label, sizeof(str16_t));
             lili_push(g_assignments, cache);
             cc_actuator_map(cache);
             break;
