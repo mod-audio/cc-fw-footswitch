@@ -16,6 +16,7 @@ extern "C"
 #include "device.h"
 #include "actuator.h"
 #include "update.h"
+#include "msg.h"
 
 
 /*
@@ -42,6 +43,11 @@ typedef struct cc_data_t {
     uint8_t *data;
     uint32_t size;
 } cc_data_t;
+
+typedef struct cc_event_t {
+    int id;
+    void *data;
+} cc_event_t;
 
 
 /*

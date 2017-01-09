@@ -60,6 +60,8 @@ typedef struct cc_assignment_t {
 void cc_assignment_add(cc_assignment_t *assignment);
 // remove an assignment from the assignments list
 void cc_assignment_remove(int assignment_id);
+// set callback to assignments events
+void cc_assignments_callback(void (*assignments_cb)(void *arg));
 // return the assignments list
 cc_assignments_t *cc_assignments(void);
 

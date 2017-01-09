@@ -5,6 +5,7 @@
 */
 
 #include <string.h>
+#include "control_chain.h"
 #include "assignment.h"
 #include "device.h"
 
@@ -40,6 +41,7 @@
 
 static cc_assignments_t *g_assignments = 0;
 static cc_assignment_t g_assignments_cache[MAX_ASSIGNMENTS];
+static void (*g_assignments_cb)(void *arg);
 
 
 /*
@@ -81,6 +83,16 @@ void cc_assignment_add(cc_assignment_t *assignment)
             memcpy(&cache->label, &assignment->label, sizeof(str16_t));
             lili_push(g_assignments, cache);
             cc_actuator_map(cache);
+
+            // callback
+            if (g_assignments_cb)
+            {
+                cc_event_t event;
+                event.id = CC_CMD_ASSIGNMENT;
+                event.data = cache;
+                g_assignments_cb(&event);
+            }
+
             break;
         }
     }
@@ -96,12 +108,27 @@ void cc_assignment_remove(int assignment_id)
         {
             cc_actuator_unmap(assignment);
             lili_pop_from(g_assignments, index);
+
+            // callback
+            if (g_assignments_cb)
+            {
+                cc_event_t event;
+                event.id = CC_CMD_UNASSIGNMENT;
+                event.data = assignment;
+                g_assignments_cb(&event);
+            }
+
             assignment->id = -1;
             break;
         }
 
         index++;
     }
+}
+
+void cc_assignments_callback(void (*assignments_cb)(void *arg))
+{
+    g_assignments_cb = assignments_cb;
 }
 
 cc_assignments_t *cc_assignments(void)

@@ -19,6 +19,8 @@
 #define BAUD_RATE           115200
 #define FOOTSWITCHES_COUNT  4
 
+#define CLEAR_LINE          "                "
+
 
 /*
 ****************************************************************************************************
@@ -62,6 +64,38 @@ static void response_cb(void *arg)
     serial_send(g_serial, data);
 }
 
+static void events_cb(void *arg)
+{
+    cc_event_t *event = arg;
+
+    if (event->id == CC_CMD_ASSIGNMENT ||
+        event->id == CC_CMD_UNASSIGNMENT)
+    {
+        cc_assignment_t *assignment = event->data;
+
+        int lcd = assignment->actuator_id & 0x02;
+        int line = assignment->actuator_id & 0x01;
+
+        // clear lcd line
+        clcd_cursor_set(lcd, line, 0);
+        clcd_print(lcd, CLEAR_LINE);
+
+        if (event->id == CC_CMD_ASSIGNMENT)
+        {
+            // print assignment label
+            clcd_cursor_set(lcd, line, 0);
+            clcd_print(lcd, assignment->label.text);
+        }
+        else
+        {
+            // turn off leds
+            hw_led(assignment->actuator_id, LED_R, LED_OFF);
+            hw_led(assignment->actuator_id, LED_G, LED_OFF);
+            hw_led(assignment->actuator_id, LED_B, LED_OFF);
+        }
+    }
+}
+
 
 /*
 ****************************************************************************************************
@@ -74,6 +108,7 @@ int main(void)
     hw_init();
     g_serial = serial_init(BAUD_RATE, serial_recv);
 
+    // init and create device
     cc_init(response_cb);
     cc_device_t *device = cc_device_new("FootEx", "uri:FootEx");
 
@@ -86,9 +121,12 @@ int main(void)
         cc_device_actuator_add(device, actuator);
     }
 
+    // set callback for assignments
+    cc_assignments_callback(events_cb);
+
     while (1)
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
         {
             int button_status = hw_button(i);
             if (button_status == BUTTON_PRESSED)
@@ -102,9 +140,6 @@ int main(void)
         }
 
         cc_process();
-
-        for (int i = 0; i < 4; i++)
-            hw_led(i, LED_R, LED_OFF);
 
         cc_assignments_t *assignments = cc_assignments();
         if (assignments)
