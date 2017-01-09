@@ -7,6 +7,9 @@
 #include <stdint.h>
 #include "chip.h"
 #include "hardware.h"
+#include "gpio.h"
+#include "delay.h"
+#include "clcd.h"
 
 
 /*
@@ -36,13 +39,7 @@ const uint32_t ExtRateIn = 0;
 ****************************************************************************************************
 */
 
-typedef struct gpio_t
-{
-    int port, pin;
-} gpio_t;
-
-typedef struct button_t
-{
+typedef struct button_t {
     int state, event;
     unsigned int count;
 } button_t;
@@ -65,6 +62,7 @@ static button_t g_buttons[N_BUTTONS];
 *       INTERNAL FUNCTIONS
 ****************************************************************************************************
 */
+
 // buttons process
 void SysTick_Handler(void)
 {
@@ -123,6 +121,9 @@ void hw_init(void)
     Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 13, FUNC1);
     Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 14, FUNC1);
 
+    // delay
+    delay_init();
+
     // leds
     for (int i = 0; i < N_LEDS; i++)
     {
@@ -139,14 +140,29 @@ void hw_init(void)
         g_buttons[i].event = -1;
     }
 
+    // LCD
+    static const clcd_gpio_t lcd1_gpio = LCD1_PINS;
+    static const clcd_gpio_t lcd2_gpio = LCD2_PINS;
+    clcd_init(CLCD_4BIT | CLCD_2LINE, &lcd1_gpio);
+    clcd_init(CLCD_4BIT | CLCD_2LINE, &lcd2_gpio);
+
+    clcd_cursor_set(0, CLCD_LINE1, 0);
+    clcd_print(0, "MOD DEVICES");
+    clcd_cursor_set(0, CLCD_LINE2, 0);
+    clcd_print(0, "CONTROL CHAIN");
+
+    clcd_cursor_set(1, CLCD_LINE1, 0);
+    clcd_print(1, "FOOTSWITCH EXT.");
+    clcd_cursor_set(1, CLCD_LINE2, 0);
+    clcd_print(1, "FW VER: 0.0.0");
+
     // backlights
     for (int i = 0; i < N_BACKLIGHTS; i++)
     {
         const gpio_t *gpio = &g_backlights_gpio[i];
         Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio->port, gpio->pin);
-        Chip_GPIO_SetPinState(LPC_GPIO, gpio->port, gpio->pin, 0);
+        Chip_GPIO_SetPinState(LPC_GPIO, gpio->port, gpio->pin, 1);
     }
-
 
     SysTick_Config(SystemCoreClock / 1000);
 }
