@@ -61,8 +61,6 @@ cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max);
 void cc_actuator_map(cc_assignment_t *assignment);
 // unmap assignment from actuator
 void cc_actuator_unmap(cc_assignment_t *assignment);
-// return a list with all created actuators
-cc_actuator_t **cc_actuators(unsigned int *n_actuators);
 // process the assignments of all created actuators
 void cc_actuators_process(void);
 

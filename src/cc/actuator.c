@@ -152,21 +152,6 @@ void cc_actuator_unmap(cc_assignment_t *assignment)
     }
 }
 
-cc_actuator_t **cc_actuators(unsigned int *n_actuators)
-{
-    static cc_actuator_t *actuators[CC_MAX_ACTUATORS+1];
-
-    for (int i = 0; i < g_actuators_count; i++)
-        actuators[i] = &g_actuators[i];
-
-    actuators[g_actuators_count] = 0;
-
-    if (n_actuators)
-        *n_actuators = g_actuators_count;
-
-    return actuators;
-}
-
 void cc_actuators_process(void)
 {
     for (int i = 0; i < g_actuators_count; i++)
