@@ -128,8 +128,6 @@ static void events_cb(void *arg)
 int main(void)
 {
     hw_init();
-    g_serial = serial_init(BAUD_RATE, serial_recv);
-
     welcome_message();
 
     // init and create device
@@ -147,6 +145,9 @@ int main(void)
 
     // set callback for assignments
     cc_assignments_callback(events_cb);
+
+    // init serial
+    g_serial = serial_init(BAUD_RATE, serial_recv);
 
     while (1)
     {
