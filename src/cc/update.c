@@ -84,8 +84,11 @@ int cc_update_pop(cc_update_t *update)
 
     if (cache)
     {
-        update->assignment_id = cache->assignment_id;
-        update->value = cache->value;
+        if (update)
+        {
+            update->assignment_id = cache->assignment_id;
+            update->value = cache->value;
+        }
 
         // make cache position available again
         cache->assignment_id = -1;
@@ -99,4 +102,9 @@ int cc_update_pop(cc_update_t *update)
 cc_updates_t *cc_updates(void)
 {
     return g_updates;
+}
+
+void cc_updates_clear(void)
+{
+    while (cc_update_pop(0));
 }

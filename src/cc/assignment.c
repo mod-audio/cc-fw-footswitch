@@ -87,7 +87,7 @@ void cc_assignment_add(cc_assignment_t *assignment)
             // callback
             if (g_assignments_cb)
             {
-                cc_event_t event;
+                static cc_event_t event;
                 event.id = CC_CMD_ASSIGNMENT;
                 event.data = cache;
                 g_assignments_cb(&event);
@@ -104,7 +104,7 @@ void cc_assignment_remove(int assignment_id)
     LILI_FOREACH(g_assignments, node)
     {
         cc_assignment_t *assignment = node->data;
-        if (assignment_id == assignment->id)
+        if (assignment_id == assignment->id || assignment_id == -1)
         {
             cc_actuator_unmap(assignment);
             lili_pop_from(g_assignments, index);
@@ -112,14 +112,16 @@ void cc_assignment_remove(int assignment_id)
             // callback
             if (g_assignments_cb)
             {
-                cc_event_t event;
+                static cc_event_t event;
                 event.id = CC_CMD_UNASSIGNMENT;
                 event.data = assignment;
                 g_assignments_cb(&event);
             }
 
             assignment->id = -1;
-            break;
+
+            if (assignment_id >= 0)
+                break;
         }
 
         index++;
@@ -134,4 +136,9 @@ void cc_assignments_callback(void (*assignments_cb)(void *arg))
 cc_assignments_t *cc_assignments(void)
 {
     return g_assignments;
+}
+
+inline void cc_assignments_clear(void)
+{
+    cc_assignment_remove(-1);
 }

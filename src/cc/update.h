@@ -54,6 +54,7 @@ typedef struct cc_update_t {
 void cc_update_push(const cc_update_t *update);
 int cc_update_pop(cc_update_t *update);
 cc_updates_t *cc_updates(void);
+void cc_updates_clear(void);
 
 
 /*

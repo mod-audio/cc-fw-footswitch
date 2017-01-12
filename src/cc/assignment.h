@@ -64,6 +64,8 @@ void cc_assignment_remove(int assignment_id);
 void cc_assignments_callback(void (*assignments_cb)(void *arg));
 // return the assignments list
 cc_assignments_t *cc_assignments(void);
+// remove all assignments
+void cc_assignments_clear(void);
 
 
 /*

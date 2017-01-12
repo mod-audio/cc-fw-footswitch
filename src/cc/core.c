@@ -40,7 +40,7 @@
 enum {WAITING_SYNCING, WAITING_HANDSHAKE, WAITING_DEV_DESCRIPTOR, LISTENING_REQUESTS};
 
 // sync message cycles definition
-enum {CC_SYNC_REGULAR_CYCLE, CC_SYNC_HANDSHAKE_CYCLE};
+enum {CC_SYNC_SETUP_CYCLE, CC_SYNC_REGULAR_CYCLE, CC_SYNC_HANDSHAKE_CYCLE};
 
 // control chain handle struct
 typedef struct cc_handle_t {
@@ -115,23 +115,35 @@ static void parser(cc_handle_t *handle)
     if (!device)
         return;
 
+    // check if is the setup cycle
+    if (msg_rx->command == CC_CMD_CHAIN_SYNC)
+    {
+        int sync_cycle = msg_rx->data[0];
+        if (sync_cycle == CC_SYNC_SETUP_CYCLE)
+        {
+            cc_updates_clear();
+            cc_assignments_clear();
+            handle->comm_state = WAITING_SYNCING;
+        }
+    }
+
     if (handle->comm_state == WAITING_SYNCING)
     {
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
             // check if it's handshake sync cycle
             int sync_cycle = msg_rx->data[0];
-            if (sync_cycle != CC_SYNC_HANDSHAKE_CYCLE)
-                return;
+            if (sync_cycle == CC_SYNC_HANDSHAKE_CYCLE)
+            {
+                // generate handshake
+                device->handshake = cc_handshake_generate(device->uri);
 
-            // generate handshake
-            device->handshake = cc_handshake_generate(device->uri);
+                // build and send handshake message
+                cc_msg_builder(CC_CMD_HANDSHAKE, device->handshake, handle->msg_tx);
+                send(handle, handle->msg_tx);
 
-            // build and send handshake message
-            cc_msg_builder(CC_CMD_HANDSHAKE, device->handshake, handle->msg_tx);
-            send(handle, handle->msg_tx);
-
-            handle->comm_state++;
+                handle->comm_state++;
+            }
         }
     }
     else if (handle->comm_state == WAITING_HANDSHAKE)
