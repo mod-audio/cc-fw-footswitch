@@ -21,6 +21,8 @@
 #define SYNC_BYTE           0xA7
 #define BROADCAST_ADDRESS   0
 
+#define I_AM_ALIVE_PERIOD   50      // in sync cycles
+
 
 /*
 ****************************************************************************************************
@@ -181,8 +183,7 @@ static void parser(cc_handle_t *handle)
         {
             // device id is used to define the communication frame
             // timer is reseted each sync message
-            if (cc_assignments())
-                timer_set(handle->device_id);
+            timer_set(handle->device_id);
         }
         else if (msg_rx->command == CC_CMD_ASSIGNMENT)
         {
@@ -209,18 +210,37 @@ static void parser(cc_handle_t *handle)
 static void timer_callback(void)
 {
     cc_handle_t *handle = &g_cc_handle;
+    static unsigned int sync_counter;
+
+    static uint8_t chain_sync_msg_data = CC_SYNC_REGULAR_CYCLE;
+    const cc_msg_t chain_sync_msg = {
+        .device_id = handle->device_id,
+        .command = CC_CMD_CHAIN_SYNC,
+        .data_size = sizeof (chain_sync_msg_data),
+        .data = &chain_sync_msg_data
+    };
 
     // TODO: [future/optimization] the update message shouldn't be built in the interrupt
-    // handler the time of the frame is being wasted with processing. ideally it has to be
+    // handler, the time of the frame is being wasted with processing. ideally it has to be
     // cached in the main loop and the interrupt handler is only used to queue the message
     // (send command)
 
     cc_updates_t *updates = cc_updates();
     if (!updates || updates->count == 0)
-        return;
-
-    cc_msg_builder(CC_CMD_DATA_UPDATE, 0, handle->msg_tx);
-    send(handle, handle->msg_tx);
+    {
+        // the device cannot stay so long time without say hey to mod, it's very needy
+        if (++sync_counter >= I_AM_ALIVE_PERIOD)
+        {
+            send(handle, &chain_sync_msg);
+            sync_counter = 0;
+        }
+    }
+    else
+    {
+        cc_msg_builder(CC_CMD_DATA_UPDATE, 0, handle->msg_tx);
+        send(handle, handle->msg_tx);
+        sync_counter = 0;
+    }
 }
 
 
