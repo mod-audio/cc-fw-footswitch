@@ -52,6 +52,22 @@ static float g_foot_value[FOOTSWITCHES_COUNT];
 ****************************************************************************************************
 */
 
+static void waiting_message(int foot)
+{
+    char text[] = {"FOOT #X"};
+
+    // foot number
+    text[6] = '1' + foot;
+
+    // define position to print
+    int lcd = foot & 0x02;
+    int line = foot & 0x01;
+
+    // print message
+    clcd_cursor_set(lcd, line, 0);
+    clcd_print(lcd, text);
+}
+
 static void welcome_message(void)
 {
     // message display 1
@@ -72,6 +88,11 @@ static void welcome_message(void)
     // clear displays
     clcd_clear(0);
     clcd_clear(1);
+
+    // print waiting message for all footswitches
+    for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
+        waiting_message(i);
+
 }
 
 static void serial_recv(void *arg)
@@ -110,6 +131,8 @@ static void events_cb(void *arg)
         }
         else
         {
+            waiting_message(assignment->actuator_id);
+
             // turn off leds
             hw_led(assignment->actuator_id, LED_R, LED_OFF);
             hw_led(assignment->actuator_id, LED_G, LED_OFF);
