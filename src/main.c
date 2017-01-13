@@ -60,7 +60,7 @@ static void waiting_message(int foot)
     text[6] = '1' + foot;
 
     // define position to print
-    int lcd = foot & 0x02;
+    int lcd = (foot & 0x02) >> 1;
     int line = foot & 0x01;
 
     // print message
@@ -92,7 +92,6 @@ static void welcome_message(void)
     // print waiting message for all footswitches
     for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
         waiting_message(i);
-
 }
 
 static void serial_recv(void *arg)
@@ -116,7 +115,7 @@ static void events_cb(void *arg)
     {
         cc_assignment_t *assignment = event->data;
 
-        int lcd = assignment->actuator_id & 0x02;
+        int lcd = (assignment->actuator_id & 0x02) >> 1;
         int line = assignment->actuator_id & 0x01;
 
         // clear lcd line
