@@ -14,6 +14,7 @@ extern "C"
 
 #include <stdint.h>
 #include "device.h"
+#include "handshake.h"
 #include "actuator.h"
 #include "update.h"
 #include "msg.h"
@@ -24,6 +25,9 @@ extern "C"
 *       MACROS
 ****************************************************************************************************
 */
+
+#define CC_PROTOCOL_MAJOR       0
+#define CC_PROTOCOL_MINOR       0
 
 
 /*

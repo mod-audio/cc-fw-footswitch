@@ -36,10 +36,13 @@ extern "C"
 ****************************************************************************************************
 */
 
+enum {CC_HANDSHAKE_OK, CC_UPDATE_AVAILABLE, CC_UPDATE_REQUIRED};
+
 typedef struct cc_handshake_t {
     string_t *uri;
     uint16_t random_id;
     version_t protocol, firmware;
+    void (*callback)(void *arg);
 } cc_handshake_t;
 
 typedef struct cc_handshake_mod_t {
@@ -55,6 +58,7 @@ typedef struct cc_handshake_mod_t {
 */
 
 cc_handshake_t *cc_handshake_generate(string_t *uri);
+void cc_handshake_callback(void (*handshake_cb)(void *arg));
 
 
 /*

@@ -140,6 +140,25 @@ static void events_cb(void *arg)
     }
 }
 
+static void handshake_cb(void *arg)
+{
+    int *status = arg;
+    if (*status == CC_UPDATE_REQUIRED)
+    {
+        // clear displays
+        clcd_clear(0);
+        clcd_clear(1);
+
+        // show update message
+        clcd_cursor_set(0, 0, 0);
+        clcd_print(0, "This device need");
+        clcd_cursor_set(0, 1, 0);
+        clcd_print(0, "to be updated");
+
+        while (1);
+    }
+}
+
 
 /*
 ****************************************************************************************************
@@ -165,8 +184,9 @@ int main(void)
         cc_device_actuator_add(device, actuator);
     }
 
-    // set callback for assignments
+    // set callbacks
     cc_assignments_callback(events_cb);
+    cc_handshake_callback(handshake_cb);
 
     // init serial
     g_serial = serial_init(BAUD_RATE, serial_recv);

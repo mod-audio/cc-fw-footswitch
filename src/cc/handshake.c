@@ -4,6 +4,7 @@
 ****************************************************************************************************
 */
 
+#include "control_chain.h"
 #include "handshake.h"
 
 
@@ -34,6 +35,8 @@
 ****************************************************************************************************
 */
 
+static cc_handshake_t g_handshake;
+
 
 /*
 ****************************************************************************************************
@@ -50,10 +53,7 @@
 
 cc_handshake_t *cc_handshake_generate(string_t *uri)
 {
-    // FIXME: it's hardcoded because should have only one call to this function
-    static cc_handshake_t s_handshake;
-
-    cc_handshake_t *handshake = &s_handshake;
+    cc_handshake_t *handshake = &g_handshake;
 
     // uri
     handshake->uri = uri;
@@ -62,8 +62,8 @@ cc_handshake_t *cc_handshake_generate(string_t *uri)
     handshake->random_id = 0xABCD;
 
     // protocol version
-    handshake->protocol.major = 0;
-    handshake->protocol.minor = 0;
+    handshake->protocol.major = CC_PROTOCOL_MAJOR;
+    handshake->protocol.minor = CC_PROTOCOL_MINOR;
     handshake->protocol.micro = 0;
 
     // firmware version
@@ -72,4 +72,9 @@ cc_handshake_t *cc_handshake_generate(string_t *uri)
     handshake->firmware.micro = 0;
 
     return handshake;
+}
+
+void cc_handshake_callback(void (*handshake_cb)(void *arg))
+{
+    g_handshake.callback = handshake_cb;
 }

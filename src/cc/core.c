@@ -158,6 +158,11 @@ static void parser(cc_handle_t *handle)
             // check whether master replied to this device
             if (device->handshake->random_id == handshake.random_id)
             {
+                int status = handshake.status;
+
+                if (device->handshake->callback)
+                    device->handshake->callback(&status);
+
                 // TODO: check status
                 // TODO: handle channel
                 handle->device_id = handshake.device_id;
