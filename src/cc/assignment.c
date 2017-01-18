@@ -106,9 +106,6 @@ void cc_assignment_remove(int assignment_id)
         cc_assignment_t *assignment = node->data;
         if (assignment_id == assignment->id || assignment_id == -1)
         {
-            cc_actuator_unmap(assignment);
-            lili_pop_from(g_assignments, index);
-
             // callback
             if (g_assignments_cb)
             {
@@ -117,6 +114,9 @@ void cc_assignment_remove(int assignment_id)
                 event.data = assignment;
                 g_assignments_cb(&event);
             }
+
+            cc_actuator_unmap(assignment);
+            lili_pop_from(g_assignments, index);
 
             assignment->id = -1;
 
