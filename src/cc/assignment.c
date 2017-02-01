@@ -16,7 +16,7 @@
 ****************************************************************************************************
 */
 
-#define MAX_ASSIGNMENTS     4
+
 
 
 /*
@@ -40,8 +40,7 @@
 */
 
 static cc_assignments_t *g_assignments = 0;
-static cc_assignment_t g_assignments_cache[MAX_ASSIGNMENTS];
-static void (*g_assignments_cb)(void *arg);
+static cc_assignment_t g_assignments_cache[CC_MAX_ASSIGNMENTS];
 
 
 /*
@@ -64,12 +63,12 @@ void cc_assignment_add(cc_assignment_t *assignment)
     {
         g_assignments = lili_create();
 
-        for (int i = 0; i < MAX_ASSIGNMENTS; i++)
+        for (int i = 0; i < CC_MAX_ASSIGNMENTS; i++)
             g_assignments_cache[i].id = -1;
     }
 
     // search for unused assignments
-    for (int i = 0; i < MAX_ASSIGNMENTS; i++)
+    for (int i = 0; i < CC_MAX_ASSIGNMENTS; i++)
     {
         cc_assignment_t *cache = &g_assignments_cache[i];
         if (cache->id == -1)
@@ -84,53 +83,35 @@ void cc_assignment_add(cc_assignment_t *assignment)
             lili_push(g_assignments, cache);
             cc_actuator_map(cache);
 
-            // callback
-            if (g_assignments_cb)
-            {
-                static cc_event_t event;
-                event.id = CC_CMD_ASSIGNMENT;
-                event.data = cache;
-                g_assignments_cb(&event);
-            }
-
             break;
         }
     }
 }
 
-void cc_assignment_remove(int assignment_id)
+int cc_assignment_remove(int assignment_id)
 {
+    if (!g_assignments)
+        return -1;
+
     int index = 0;
     LILI_FOREACH(g_assignments, node)
     {
         cc_assignment_t *assignment = node->data;
         if (assignment_id == assignment->id || assignment_id == -1)
         {
-            // callback
-            if (g_assignments_cb)
-            {
-                static cc_event_t event;
-                event.id = CC_CMD_UNASSIGNMENT;
-                event.data = assignment;
-                g_assignments_cb(&event);
-            }
-
             cc_actuator_unmap(assignment);
             lili_pop_from(g_assignments, index);
 
             assignment->id = -1;
 
             if (assignment_id >= 0)
-                break;
+                return assignment->actuator_id;
         }
 
         index++;
     }
-}
 
-void cc_assignments_callback(void (*assignments_cb)(void *arg))
-{
-    g_assignments_cb = assignments_cb;
+    return -1;
 }
 
 cc_assignments_t *cc_assignments(void)

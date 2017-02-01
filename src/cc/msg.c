@@ -74,9 +74,10 @@ cc_msg_t *cc_msg_new(void)
 
 int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
 {
+    uint8_t *pdata = msg->data;
+
     if (msg->command == CC_CMD_HANDSHAKE)
     {
-        uint8_t *pdata = msg->data;
         cc_handshake_mod_t *handshake = data_struct;
 
         // random id
@@ -87,9 +88,13 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         handshake->device_id = *pdata++;
         handshake->channel = *pdata++;
     }
+    if (msg->command == CC_CMD_DEV_CONTROL)
+    {
+        int *enable = data_struct;
+        *enable = *pdata++;
+    }
     else if (msg->command == CC_CMD_ASSIGNMENT)
     {
-        uint8_t *pdata = msg->data;
         cc_assignment_t *assignment = data_struct;
 
         // assignment id, actuator id
@@ -114,7 +119,6 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
     }
     else if (msg->command == CC_CMD_UNASSIGNMENT)
     {
-        uint8_t *pdata = msg->data;
         uint8_t *assignment_id = data_struct;
 
         *assignment_id = *pdata++;

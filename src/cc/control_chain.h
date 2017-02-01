@@ -53,6 +53,8 @@ typedef struct cc_event_t {
     void *data;
 } cc_event_t;
 
+enum {CC_EV_HANDSHAKE_FAILED, CC_EV_ASSIGNMENT, CC_EV_UNASSIGNMENT, CC_EV_DEVICE_DISABLED};
+
 
 /*
 ****************************************************************************************************
@@ -60,7 +62,7 @@ typedef struct cc_event_t {
 ****************************************************************************************************
 */
 
-void cc_init(void (*response_cb)(void *arg));
+void cc_init(void (*response_cb)(void *arg), void (*events_cb)(void *arg));
 void cc_process(void);
 void cc_parse(const cc_data_t *received);
 

@@ -37,8 +37,8 @@ extern "C"
 ****************************************************************************************************
 */
 
-enum cc_cmd_t {CC_CMD_CHAIN_SYNC, CC_CMD_HANDSHAKE, CC_CMD_DEV_DESCRIPTOR, CC_CMD_ASSIGNMENT,
-               CC_CMD_DATA_UPDATE, CC_CMD_UNASSIGNMENT};
+enum cc_cmd_t {CC_CMD_CHAIN_SYNC, CC_CMD_HANDSHAKE, CC_CMD_DEV_CONTROL, CC_CMD_DEV_DESCRIPTOR,
+               CC_CMD_ASSIGNMENT, CC_CMD_DATA_UPDATE, CC_CMD_UNASSIGNMENT, CC_NUM_COMMANDS};
 
 typedef struct cc_msg_t {
     int device_id, command;

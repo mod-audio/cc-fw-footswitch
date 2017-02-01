@@ -73,8 +73,3 @@ cc_handshake_t *cc_handshake_generate(string_t *uri)
 
     return handshake;
 }
-
-void cc_handshake_callback(void (*handshake_cb)(void *arg))
-{
-    g_handshake.callback = handshake_cb;
-}

@@ -110,8 +110,27 @@ static void events_cb(void *arg)
 {
     cc_event_t *event = arg;
 
-    if (event->id == CC_CMD_ASSIGNMENT ||
-        event->id == CC_CMD_UNASSIGNMENT)
+    if (event->id == CC_EV_HANDSHAKE_FAILED ||
+        event->id == CC_EV_DEVICE_DISABLED)
+    {
+        int *status = event->data;
+        if (*status == CC_UPDATE_REQUIRED)
+        {
+            // clear displays
+            clcd_clear(0);
+            clcd_clear(1);
+
+            // show update message
+            clcd_cursor_set(0, 0, 0);
+            clcd_print(0, "This device need");
+            clcd_cursor_set(0, 1, 0);
+            clcd_print(0, "to be updated");
+
+            // FIXME: not cool, not cool
+            while (1);
+        }
+    }
+    else if (event->id == CC_EV_ASSIGNMENT)
     {
         cc_assignment_t *assignment = event->data;
 
@@ -122,40 +141,28 @@ static void events_cb(void *arg)
         clcd_cursor_set(lcd, line, 0);
         clcd_print(lcd, CLEAR_LINE);
 
-        if (event->id == CC_CMD_ASSIGNMENT)
-        {
-            // print assignment label
-            clcd_cursor_set(lcd, line, 0);
-            clcd_print(lcd, assignment->label.text);
-        }
-        else
-        {
-            waiting_message(assignment->actuator_id);
-
-            // turn off leds
-            hw_led(assignment->actuator_id, LED_R, LED_OFF);
-            hw_led(assignment->actuator_id, LED_G, LED_OFF);
-            hw_led(assignment->actuator_id, LED_B, LED_OFF);
-        }
+        // print assignment label
+        clcd_cursor_set(lcd, line, 0);
+        clcd_print(lcd, assignment->label.text);
     }
-}
-
-static void handshake_cb(void *arg)
-{
-    int *status = arg;
-    if (*status == CC_UPDATE_REQUIRED)
+    else if (event->id == CC_EV_UNASSIGNMENT)
     {
-        // clear displays
-        clcd_clear(0);
-        clcd_clear(1);
+        int *act_id = event->data;
+        int actuator_id = *act_id;
 
-        // show update message
-        clcd_cursor_set(0, 0, 0);
-        clcd_print(0, "This device need");
-        clcd_cursor_set(0, 1, 0);
-        clcd_print(0, "to be updated");
+        int lcd = (actuator_id & 0x02) >> 1;
+        int line = actuator_id & 0x01;
 
-        while (1);
+        // clear lcd line
+        clcd_cursor_set(lcd, line, 0);
+        clcd_print(lcd, CLEAR_LINE);
+
+        waiting_message(actuator_id);
+
+        // turn off leds
+        hw_led(actuator_id, LED_R, LED_OFF);
+        hw_led(actuator_id, LED_G, LED_OFF);
+        hw_led(actuator_id, LED_B, LED_OFF);
     }
 }
 
@@ -172,7 +179,7 @@ int main(void)
     welcome_message();
 
     // init and create device
-    cc_init(response_cb);
+    cc_init(response_cb, events_cb);
     cc_device_t *device = cc_device_new("FootEx", "uri:FootEx");
 
     // create actuators
@@ -183,10 +190,6 @@ int main(void)
 
         cc_device_actuator_add(device, actuator);
     }
-
-    // set callbacks
-    cc_assignments_callback(events_cb);
-    cc_handshake_callback(handshake_cb);
 
     // init serial
     g_serial = serial_init(BAUD_RATE, serial_recv);

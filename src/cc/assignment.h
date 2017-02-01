@@ -33,6 +33,8 @@ extern "C"
 ****************************************************************************************************
 */
 
+#define CC_MAX_ASSIGNMENTS      4
+
 
 /*
 ****************************************************************************************************
@@ -58,8 +60,8 @@ typedef struct cc_assignment_t {
 
 // add an assignment to the assignments list
 void cc_assignment_add(cc_assignment_t *assignment);
-// remove an assignment from the assignments list
-void cc_assignment_remove(int assignment_id);
+// remove an assignment from the assignments list and returns the actuator it was assigned
+int cc_assignment_remove(int assignment_id);
 // set callback to assignments events
 void cc_assignments_callback(void (*assignments_cb)(void *arg));
 // return the assignments list

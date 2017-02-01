@@ -47,6 +47,7 @@ enum {CC_SYNC_SETUP_CYCLE, CC_SYNC_REGULAR_CYCLE, CC_SYNC_HANDSHAKE_CYCLE};
 // control chain handle struct
 typedef struct cc_handle_t {
     void (*response_cb)(void *arg);
+    void (*events_cb)(void *arg);
     int comm_state, msg_state;
     cc_msg_t *msg_rx, *msg_tx;
     int device_id;
@@ -109,6 +110,18 @@ static void send(cc_handle_t *handle, const cc_msg_t *msg)
     handle->response_cb(&response);
 }
 
+static void raise_event(cc_handle_t *handle, int event_id, void *data)
+{
+    static cc_event_t event;
+
+    if (handle->events_cb)
+    {
+        event.id = event_id;
+        event.data = data;
+        handle->events_cb(&event);
+    }
+}
+
 static void parser(cc_handle_t *handle)
 {
     cc_msg_t *msg_rx = handle->msg_rx;
@@ -158,10 +171,7 @@ static void parser(cc_handle_t *handle)
             // check whether master replied to this device
             if (device->handshake->random_id == handshake.random_id)
             {
-                int status = handshake.status;
-
-                if (device->handshake->callback)
-                    device->handshake->callback(&status);
+                raise_event(handle, CC_EV_HANDSHAKE_FAILED, &handshake.status);
 
                 // TODO: check status
                 // TODO: handle channel
@@ -190,6 +200,21 @@ static void parser(cc_handle_t *handle)
             // timer is reseted each sync message
             timer_set(handle->device_id);
         }
+        else if (msg_rx->command == CC_CMD_DEV_CONTROL)
+        {
+            int enable;
+            cc_msg_parser(msg_rx, &enable);
+
+            // device disabled
+            if (enable == 0)
+            {
+                int status = CC_UPDATE_REQUIRED;
+                raise_event(handle, CC_EV_DEVICE_DISABLED, &status);
+
+                // FIXME: properly disable device
+                while (1);
+            }
+        }
         else if (msg_rx->command == CC_CMD_ASSIGNMENT)
         {
             cc_assignment_t assignment;
@@ -199,12 +224,15 @@ static void parser(cc_handle_t *handle)
             send(handle, handle->msg_tx);
 
             cc_assignment_add(&assignment);
+            raise_event(handle, CC_EV_ASSIGNMENT, &assignment);
         }
         else if (msg_rx->command == CC_CMD_UNASSIGNMENT)
         {
             uint8_t assignment_id;
             cc_msg_parser(msg_rx, &assignment_id);
-            cc_assignment_remove(assignment_id);
+
+            int actuator_id = cc_assignment_remove(assignment_id);
+            raise_event(handle, CC_EV_UNASSIGNMENT, &actuator_id);
 
             cc_msg_builder(CC_CMD_UNASSIGNMENT, 0, handle->msg_tx);
             send(handle, handle->msg_tx);
@@ -255,9 +283,10 @@ static void timer_callback(void)
 ****************************************************************************************************
 */
 
-void cc_init(void (*response_cb)(void *arg))
+void cc_init(void (*response_cb)(void *arg), void (*events_cb)(void *arg))
 {
     g_cc_handle.response_cb = response_cb;
+    g_cc_handle.events_cb = events_cb;
     g_cc_handle.msg_rx = cc_msg_new();
     g_cc_handle.msg_tx = cc_msg_new();
 
