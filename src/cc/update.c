@@ -80,6 +80,9 @@ void cc_update_push(const cc_update_t *update)
 
 int cc_update_pop(cc_update_t *update)
 {
+    if (!g_updates)
+        return 0;
+
     cc_update_t *cache = lili_pop_front(g_updates);
 
     if (cache)
