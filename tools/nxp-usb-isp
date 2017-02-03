@@ -79,24 +79,31 @@ do
 			echo "Match found: Disk device is $disk"
 			# We found the disk for our USB device. Now test to
 			# see if we can find it in the mount command output.
-			# /dev/sdc on /media/CRP DISABLD type vfat (rw,nosuid,nodev,uhelper=udisks,uid=1000,gid=1000,shortname=mixed,dmask=0077,utf8=1,flush)
-			volpath=$(mount | grep "^$disk " | cut -d' ' -f3- | cut -d'(' -f1)
+			# /dev/sdc on /media/CRP DISABLD type vfat (rw,nosuid,nodev,...)
+			volpath=$(mount | grep "^$disk " | sed 's/ type.*//g' | cut -d' ' -f3-)
 			# volpath should be: /media/CRP DISABLD type vfat
 			if [ "$volpath" = "" ]; then
-				if [[ $(command -v udisks) > /dev/null ]]; then
-					udisks --mount $disk
-					volpath=$(mount | grep "^$disk " | cut -d' ' -f3- | cut -d'(' -f1)
-				else
-					echo "Found device but it appears to be unmounted."
-					echo "Please mount the partition and try the update again."
-					echo "Alternatively, install udisks command to mount it automatically."
-					exit 1
+				echo "Trying to mount device partition"
+				# Try to mount using mount command
+				volpath=/tmp/nxp_lpc
+				mkdir -p $volpath
+				mount $disk $volpath > /dev/null
+
+				# Try to mount using udisks command
+				if [[ $? -ne 0 ]]; then
+					if [[ $(command -v udisks) > /dev/null ]]; then
+						udisks --mount $disk
+						volpath=$(mount | grep "^$disk " | sed 's/ type.*//g' | cut -d' ' -f3-)
+					else
+						echo "Found device but it appears to be unmounted."
+						echo "Please mount the partition and try the update again."
+						echo "Alternatively, install udisks command to mount it automatically."
+						exit 1
+					fi
 				fi
 			fi
 
-			# Get the volume path from the mount command output
-			# make volpath look like: /media/CRP DISABLD
-			volpath="${volpath:0:${#volpath} - 11}"
+			echo "Device mounted at ${volpath}"
 
 			# create file path for firmware.bin on ISP device
 			volpath="${volpath}/firmware.bin"
@@ -128,6 +135,11 @@ do
 				# in a different order, scrambling the firmware update
 				# flash writes.
 				dd bs=1024 conv=nocreat,notrunc if="$1" of="$volpath"
+				if [[ $? -ne 0 ]]; then
+					echo "Failed when trying to flash firmware"
+					exit 1
+				fi
+
 				echo "Firmware update complete!"
 
 				# unmount device when done to ensure that all of the
