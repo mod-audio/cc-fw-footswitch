@@ -138,6 +138,7 @@ static void parser(cc_handle_t *handle)
         {
             cc_updates_clear();
             cc_assignments_clear();
+            raise_event(handle, CC_EV_MASTER_RESETED, 0);
             handle->comm_state = WAITING_SYNCING;
         }
     }

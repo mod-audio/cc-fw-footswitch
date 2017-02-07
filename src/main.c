@@ -94,6 +94,16 @@ static void welcome_message(void)
         waiting_message(i);
 }
 
+static void turn_off_leds(void)
+{
+    for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
+    {
+        hw_led(i, LED_R, LED_OFF);
+        hw_led(i, LED_G, LED_OFF);
+        hw_led(i, LED_B, LED_OFF);
+    }
+}
+
 static void serial_recv(void *arg)
 {
     cc_data_t *data = arg;
@@ -116,7 +126,8 @@ static void events_cb(void *arg)
         int *status = event->data;
         if (*status == CC_UPDATE_REQUIRED)
         {
-            // clear displays
+            // clear displays and leds
+            turn_off_leds();
             clcd_clear(0);
             clcd_clear(1);
 
@@ -163,6 +174,17 @@ static void events_cb(void *arg)
         hw_led(actuator_id, LED_R, LED_OFF);
         hw_led(actuator_id, LED_G, LED_OFF);
         hw_led(actuator_id, LED_B, LED_OFF);
+    }
+    else if (event->id == CC_EV_MASTER_RESETED)
+    {
+        // clear displays and leds
+        clcd_clear(0);
+        clcd_clear(1);
+        turn_off_leds();
+
+        // print waiting message for all footswitches
+        for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
+            waiting_message(i);
     }
 }
 
