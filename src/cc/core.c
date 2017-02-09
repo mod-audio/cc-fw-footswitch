@@ -221,11 +221,11 @@ static void parser(cc_handle_t *handle)
             cc_assignment_t assignment;
             cc_msg_parser(msg_rx, &assignment);
 
-            cc_msg_builder(CC_CMD_ASSIGNMENT, 0, handle->msg_tx);
-            send(handle, handle->msg_tx);
-
             cc_assignment_add(&assignment);
             raise_event(handle, CC_EV_ASSIGNMENT, &assignment);
+
+            cc_msg_builder(CC_CMD_ASSIGNMENT, 0, handle->msg_tx);
+            send(handle, handle->msg_tx);
         }
         else if (msg_rx->command == CC_CMD_UNASSIGNMENT)
         {
