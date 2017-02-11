@@ -15,7 +15,6 @@
 */
 
 #define RX_BUFFER_SIZE  64
-#define TX_BUFFER_SIZE  64
 
 
 /*
@@ -32,9 +31,8 @@
 */
 
 typedef struct serial_t {
-    RINGBUFF_T rx_rb, tx_rb;
+    RINGBUFF_T rx_rb;
     uint8_t rx_buffer[RX_BUFFER_SIZE];
-    uint8_t tx_buffer[TX_BUFFER_SIZE];
     void (*receive_cb)(void *arg);
 } serial_t;
 
@@ -61,7 +59,7 @@ void UART_IRQHandler(void)
     // TODO: handle errors
 
     // use default ring buffer handler
-    Chip_UART_IRQRBHandler(LPC_USART, &serial->rx_rb, &serial->tx_rb);
+    Chip_UART_RXIntHandlerRB(LPC_USART, &serial->rx_rb);
 
     uint8_t buffer[RX_BUFFER_SIZE], read;
     read = Chip_UART_ReadRB(LPC_USART, &serial->rx_rb, &buffer, sizeof(buffer));
@@ -109,7 +107,6 @@ serial_t* serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg))
 
     // create ring buffers
     RingBuffer_Init(&serial->rx_rb, &serial->rx_buffer, 1, RX_BUFFER_SIZE);
-    RingBuffer_Init(&serial->tx_rb, &serial->tx_buffer, 1, TX_BUFFER_SIZE);
 
     // set serial callback
     serial->receive_cb = receive_cb;
@@ -120,5 +117,5 @@ serial_t* serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg))
 void serial_send(serial_t *serial, serial_data_t *sdata)
 {
     if (sdata->size > 0)
-        Chip_UART_SendRB(LPC_USART, &serial->tx_rb, sdata->data, sdata->size);
+        Chip_UART_SendBlocking(LPC_USART, sdata->data, sdata->size);
 }
