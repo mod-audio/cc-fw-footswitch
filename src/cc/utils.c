@@ -121,7 +121,7 @@ string_t *string_create(const char *str)
     return obj;
 }
 
-uint8_t string_serialize(const string_t *str, uint8_t *buffer)
+int string_serialize(const string_t *str, uint8_t *buffer)
 {
     buffer[0] = str->size;
     memcpy(&buffer[1], str->text, str->size);
@@ -154,7 +154,36 @@ string_t *string_deserialize(const uint8_t *data, uint32_t *written)
     return str;
 }
 
-uint8_t str16_deserialize(const uint8_t *data, str16_t *str)
+void string_destroy(string_t *str)
+{
+    if (str)
+    {
+        if (str->text)
+            free(str->text);
+
+        free(str);
+    }
+}
+
+int str16_create(const char *str, str16_t *dest)
+{
+    int i;
+    for (i = 0; i < 16 && str[i]; i++)
+        dest->text[i] = str[i];
+
+    dest->size = i;
+    return i;
+}
+
+int str16_serialize(const str16_t *str, uint8_t *buffer)
+{
+    buffer[0] = str->size;
+    memcpy(&buffer[1], str->text, str->size);
+
+    return (str->size + 1);
+}
+
+int str16_deserialize(const uint8_t *data, str16_t *str)
 {
     uint8_t written = 0;
 
@@ -171,17 +200,6 @@ uint8_t str16_deserialize(const uint8_t *data, str16_t *str)
     }
 
     return written;
-}
-
-void string_destroy(string_t *str)
-{
-    if (str)
-    {
-        if (str->text)
-            free(str->text);
-
-        free(str);
-    }
 }
 
 int bytes_to_float(const uint8_t *array, float *pvar)
