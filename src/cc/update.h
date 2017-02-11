@@ -39,7 +39,6 @@ extern "C"
 typedef lili_t cc_updates_t;
 
 typedef struct cc_update_t {
-    int id;
     int assignment_id;
     float value;
 } cc_update_t;

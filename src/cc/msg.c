@@ -129,12 +129,12 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
 
 int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
 {
+    uint8_t *pdata = msg->data;
     msg->command = command;
 
     if (command == CC_CMD_HANDSHAKE)
     {
         const cc_handshake_t *handshake = data_struct;
-        uint8_t *pdata = msg->data;
 
         // serialize uri
         pdata += string_serialize(handshake->uri, pdata);
@@ -152,13 +152,10 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         *pdata++ = handshake->firmware.major;
         *pdata++ = handshake->firmware.minor;
         *pdata++ = handshake->firmware.micro;
-
-        msg->data_size = (pdata - msg->data);
     }
     else if (command == CC_CMD_DEV_DESCRIPTOR)
     {
         const cc_device_t *device = data_struct;
-        uint8_t *pdata = msg->data;
 
         // serialize label
         pdata += string_serialize(device->label, pdata);
@@ -170,19 +167,30 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         for (unsigned int i = 0; i < device->actuators_count; i++)
         {
             cc_actuator_t *actuator = device->actuators[i];
-            *pdata++ = actuator->id;
-        }
 
-        msg->data_size = (pdata - msg->data);
+            // actuator id
+            *pdata++ = actuator->id;
+
+            // actuator name
+            pdata += str16_serialize(&actuator->name, pdata);
+
+            // supported modes
+            uint8_t *modes = (uint8_t *) &actuator->supported_modes;
+            *pdata++ = *modes++;
+            *pdata++ = *modes++;
+            *pdata++ = *modes++;
+            *pdata++ = *modes++;
+
+            // max assignments
+            *pdata++ = actuator->max_assignments;
+        }
     }
     else if (command == CC_CMD_ASSIGNMENT || command == CC_CMD_UNASSIGNMENT)
     {
-        msg->data_size = 0;
+        // no data
     }
     else if (command == CC_CMD_DATA_UPDATE)
     {
-        uint8_t *pdata = msg->data;
-
         cc_updates_t *updates = cc_updates();
         *pdata++ = updates->count;
 
@@ -198,13 +206,13 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
             *pdata++ = *pvalue++;
             *pdata++ = *pvalue++;
         }
-
-        msg->data_size = (pdata - msg->data);
     }
     else
     {
         return -1;
     }
+
+    msg->data_size = (pdata - msg->data);
 
     return 0;
 }

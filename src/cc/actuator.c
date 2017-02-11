@@ -108,7 +108,7 @@ static int update_assignment_value(cc_actuator_t *actuator, cc_assignment_t *ass
 ****************************************************************************************************
 */
 
-cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max)
+cc_actuator_t *cc_actuator_new(cc_actuator_config_t *config)
 {
     if (g_actuators_count >= CC_MAX_ACTUATORS)
         return 0;
@@ -117,10 +117,14 @@ cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max)
 
     // initialize actuator data struct
     actuator->id = g_actuators_count;
-    actuator->type = type;
-    actuator->value = var;
-    actuator->min = min;
-    actuator->max = max;
+    actuator->type = config->type;
+    actuator->value = config->value;
+    actuator->min = config->min;
+    actuator->max = config->max;
+    actuator->supported_modes = config->supported_modes;
+    actuator->max_assignments = config->max_assignments;
+    str16_create(config->name, &actuator->name);
+
     g_actuators_count++;
 
     return actuator;

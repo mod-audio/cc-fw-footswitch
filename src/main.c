@@ -155,6 +155,8 @@ static void events_cb(void *arg)
         // print assignment label
         clcd_cursor_set(lcd, line, 0);
         clcd_print(lcd, assignment->label.text);
+
+        hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
     }
     else if (event->id == CC_EV_UNASSIGNMENT)
     {
@@ -207,9 +209,20 @@ int main(void)
     // create actuators
     for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
     {
-        cc_actuator_t *actuator =
-            cc_actuator_new(CC_ACTUATOR_MOMENTARY, &g_foot_value[i], 0, 1);
+        char name[16] = {"Foot #"};
+        name[6] = '1' + i;
+        name[7] = 0;
 
+        cc_actuator_config_t actuator_config;
+        actuator_config.type = CC_ACTUATOR_MOMENTARY;
+        actuator_config.name = name;
+        actuator_config.value = &g_foot_value[i];
+        actuator_config.min = 0.0;
+        actuator_config.max = 1.0;
+        actuator_config.supported_modes = CC_MODE_TOGGLE | CC_MODE_TRIGGER;
+        actuator_config.max_assignments = 1;
+
+        cc_actuator_t *actuator = cc_actuator_new(&actuator_config);
         cc_device_actuator_add(device, actuator);
     }
 
@@ -233,6 +246,7 @@ int main(void)
 
         cc_process();
 
+/*
         cc_assignments_t *assignments = cc_assignments();
         if (assignments)
         {
@@ -243,6 +257,7 @@ int main(void)
                     hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
             }
         }
+*/
     }
 
     return 0;

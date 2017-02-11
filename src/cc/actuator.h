@@ -40,12 +40,23 @@ extern "C"
 
 enum {CC_ACTUATOR_CONTINUOUS, CC_ACTUATOR_DISCRETE, CC_ACTUATOR_SWITCH, CC_ACTUATOR_MOMENTARY};
 
-typedef struct cc_actuator_t {
-    int id, type;
+typedef struct cc_actuator_config_t {
+    int type;
+    const char *name;
     volatile float *value;
     float min, max;
+    uint32_t supported_modes;
+    int max_assignments;
+} cc_actuator_config_t;
+
+typedef struct cc_actuator_t {
+    int id, type, lock;
+    str16_t name;
+    volatile float *value;
+    float min, max;
+    uint32_t supported_modes;
+    int max_assignments;
     cc_assignment_t *assignment;
-    int lock;
 } cc_actuator_t;
 
 
@@ -56,7 +67,7 @@ typedef struct cc_actuator_t {
 */
 
 // create a new actuator object
-cc_actuator_t *cc_actuator_new(int type, float *var, float min, float max);
+cc_actuator_t *cc_actuator_new(cc_actuator_config_t *config);
 // map assignment to actuator
 void cc_actuator_map(cc_assignment_t *assignment);
 // unmap assignment from actuator
