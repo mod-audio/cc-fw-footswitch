@@ -46,9 +46,10 @@ typedef lili_t cc_assignments_t;
 
 typedef struct cc_assignment_t {
     int id, actuator_id;
-    str16_t label;
+    str16_t label, unit;
     float value, min, max, def;
     uint32_t mode;
+    uint16_t steps;
 } cc_assignment_t;
 
 

@@ -79,7 +79,9 @@ void cc_assignment_add(cc_assignment_t *assignment)
             cache->min = assignment->min;
             cache->max = assignment->max;
             cache->mode = assignment->mode;
+            cache->steps = assignment->steps;
             memcpy(&cache->label, &assignment->label, sizeof(str16_t));
+            memcpy(&cache->unit, &assignment->unit, sizeof(str16_t));
             lili_push(g_assignments, cache);
             cc_actuator_map(cache);
 

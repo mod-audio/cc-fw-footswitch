@@ -116,6 +116,14 @@ int cc_msg_parser(const cc_msg_t *msg, void *data_struct)
         *pmode++ = *pdata++;
         *pmode++ = *pdata++;
         *pmode++ = *pdata++;
+
+        // steps
+        uint8_t *psteps = (uint8_t *) &assignment->steps;
+        *psteps++ = *pdata++;
+        *psteps++ = *pdata++;
+
+        // unit
+        pdata += str16_deserialize(pdata, &assignment->unit);
     }
     else if (msg->command == CC_CMD_UNASSIGNMENT)
     {
