@@ -13,9 +13,9 @@ extern "C"
 */
 
 #include <stdint.h>
-#include "utils.h"
 #include "handshake.h"
 #include "actuator.h"
+#include "utils.h"
 
 
 /*

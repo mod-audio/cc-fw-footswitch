@@ -16,7 +16,7 @@
 ****************************************************************************************************
 */
 
-
+#define MAX_ASSIGNMENTS     (CC_MAX_DEVICES * CC_MAX_ACTUATORS * CC_MAX_ASSIGNMENTS)
 
 
 /*
@@ -40,7 +40,7 @@
 */
 
 static cc_assignments_t *g_assignments = 0;
-static cc_assignment_t g_assignments_cache[CC_MAX_ASSIGNMENTS];
+static cc_assignment_t g_assignments_cache[MAX_ASSIGNMENTS];
 
 
 /*
@@ -63,12 +63,12 @@ void cc_assignment_add(cc_assignment_t *assignment)
     {
         g_assignments = lili_create();
 
-        for (int i = 0; i < CC_MAX_ASSIGNMENTS; i++)
+        for (int i = 0; i < MAX_ASSIGNMENTS; i++)
             g_assignments_cache[i].id = -1;
     }
 
     // search for unused assignments
-    for (int i = 0; i < CC_MAX_ASSIGNMENTS; i++)
+    for (int i = 0; i < MAX_ASSIGNMENTS; i++)
     {
         cc_assignment_t *cache = &g_assignments_cache[i];
         if (cache->id == -1)

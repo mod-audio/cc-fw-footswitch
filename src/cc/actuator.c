@@ -16,6 +16,8 @@
 ****************************************************************************************************
 */
 
+#define MAX_ACTUATORS   (CC_MAX_DEVICES * CC_MAX_ACTUATORS)
+
 
 /*
 ****************************************************************************************************
@@ -37,7 +39,7 @@
 ****************************************************************************************************
 */
 
-static cc_actuator_t g_actuators[CC_MAX_ACTUATORS];
+static cc_actuator_t g_actuators[MAX_ACTUATORS];
 static unsigned int g_actuators_count;
 
 
@@ -111,7 +113,7 @@ static int update_assignment_value(cc_actuator_t *actuator, cc_assignment_t *ass
 
 cc_actuator_t *cc_actuator_new(cc_actuator_config_t *config)
 {
-    if (g_actuators_count >= CC_MAX_ACTUATORS)
+    if (g_actuators_count >= MAX_ACTUATORS)
         return 0;
 
     cc_actuator_t *actuator = &g_actuators[g_actuators_count];

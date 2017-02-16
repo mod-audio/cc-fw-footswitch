@@ -4,7 +4,7 @@
 ****************************************************************************************************
 */
 
-#include <stdlib.h>
+#include "control_chain.h"
 #include "device.h"
 
 
@@ -13,8 +13,6 @@
 *       INTERNAL MACROS
 ****************************************************************************************************
 */
-
-#define CC_MAX_DEVICES  1
 
 
 /*
@@ -39,6 +37,7 @@
 
 static cc_device_t g_devices[CC_MAX_DEVICES];
 static unsigned int g_devices_count;
+static cc_actuator_t *g_actuators[CC_MAX_DEVICES*CC_MAX_ACTUATORS];
 
 
 /*
@@ -66,7 +65,7 @@ cc_device_t *cc_device_new(const char *name, const char *uri)
     device->label = string_create(name);
 
     // create a list of actuators
-    device->actuators = malloc(sizeof(cc_actuator_t *) * CC_MAX_ACTUATORS);
+    device->actuators = &g_actuators[g_devices_count * CC_MAX_ACTUATORS];
     device->actuators_count = 0;
 
     g_devices_count++;

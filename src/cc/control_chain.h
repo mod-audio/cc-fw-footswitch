@@ -36,6 +36,13 @@ extern "C"
 ****************************************************************************************************
 */
 
+// maximum number of devices that can created
+#define CC_MAX_DEVICES      1
+// maximum number of actuators that can created per device
+#define CC_MAX_ACTUATORS    4
+// maximum number of assignments that can created per actuator
+#define CC_MAX_ASSIGNMENTS  1
+
 
 /*
 ****************************************************************************************************
