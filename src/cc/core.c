@@ -298,7 +298,7 @@ void cc_process(void)
 {
     // process each actuator going through all assignments
     // data update messages will be queued and sent in the next frame
-    cc_actuators_process();
+    cc_actuators_process(g_cc_handle.events_cb);
 }
 
 void cc_parse(const cc_data_t *received)

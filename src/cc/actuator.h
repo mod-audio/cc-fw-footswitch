@@ -73,7 +73,7 @@ void cc_actuator_map(cc_assignment_t *assignment);
 // unmap assignment from actuator
 void cc_actuator_unmap(cc_assignment_t *assignment);
 // process the assignments of all created actuators
-void cc_actuators_process(void);
+void cc_actuators_process(void (*events_cb)(void *arg));
 
 
 /*

@@ -104,6 +104,14 @@ static void turn_off_leds(void)
     }
 }
 
+static void update_leds(cc_assignment_t *assignment)
+{
+    if (assignment->mode == CC_MODE_TOGGLE)
+        hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
+    else if (assignment->mode == CC_MODE_TRIGGER)
+        hw_led(assignment->actuator_id, LED_G, LED_ON);
+}
+
 static void serial_recv(void *arg)
 {
     cc_data_t *data = arg;
@@ -156,7 +164,7 @@ static void events_cb(void *arg)
         clcd_cursor_set(lcd, line, 0);
         clcd_print(lcd, assignment->label.text);
 
-        hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
+        update_leds(assignment);
     }
     else if (event->id == CC_EV_UNASSIGNMENT)
     {
@@ -176,6 +184,11 @@ static void events_cb(void *arg)
         hw_led(actuator_id, LED_R, LED_OFF);
         hw_led(actuator_id, LED_G, LED_OFF);
         hw_led(actuator_id, LED_B, LED_OFF);
+    }
+    else if (event->id == CC_EV_UPDATE)
+    {
+        cc_assignment_t *assignment = event->data;
+        update_leds(assignment);
     }
     else if (event->id == CC_EV_MASTER_RESETED)
     {
@@ -204,7 +217,7 @@ int main(void)
 
     // init and create device
     cc_init(response_cb, events_cb);
-    cc_device_t *device = cc_device_new("FootEx", "uri:FootEx");
+    cc_device_t *device = cc_device_new("FootEx", "https://github.com/moddevices/cc-fw-footswitch");
 
     // create actuators
     for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
@@ -245,19 +258,6 @@ int main(void)
         }
 
         cc_process();
-
-/*
-        cc_assignments_t *assignments = cc_assignments();
-        if (assignments)
-        {
-            LILI_FOREACH(assignments, node)
-            {
-                cc_assignment_t *assignment = node->data;
-                if (assignment->mode == CC_MODE_TOGGLE)
-                    hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
-            }
-        }
-*/
     }
 
     return 0;

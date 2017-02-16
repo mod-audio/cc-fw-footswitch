@@ -4,6 +4,7 @@
 ****************************************************************************************************
 */
 
+#include "control_chain.h"
 #include "actuator.h"
 #include "update.h"
 #include <math.h>
@@ -156,7 +157,7 @@ void cc_actuator_unmap(cc_assignment_t *assignment)
     }
 }
 
-void cc_actuators_process(void)
+void cc_actuators_process(void (*events_cb)(void *arg))
 {
     for (int i = 0; i < g_actuators_count; i++)
     {
@@ -175,6 +176,14 @@ void cc_actuators_process(void)
             update.assignment_id = assignment->id;
             update.value = assignment->value;
             cc_update_push(&update);
+
+            if (events_cb)
+            {
+                cc_event_t event;
+                event.id = CC_EV_UPDATE;
+                event.data = assignment;
+                events_cb(&event);
+            }
         }
     }
 }
