@@ -176,9 +176,6 @@ int cc_msg_builder(int command, const void *data_struct, cc_msg_t *msg)
         {
             cc_actuator_t *actuator = device->actuators[i];
 
-            // actuator id
-            *pdata++ = actuator->id;
-
             // actuator name
             pdata += str16_serialize(&actuator->name, pdata);
 
