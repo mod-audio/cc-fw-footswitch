@@ -130,10 +130,11 @@ static void parser(cc_handle_t *handle)
     if (!device)
         return;
 
-    // check if is the setup cycle
+    // check if it's setup cycle
+    int sync_cycle;
     if (msg_rx->command == CC_CMD_CHAIN_SYNC)
     {
-        int sync_cycle = msg_rx->data[0];
+        sync_cycle = msg_rx->data[0];
         if (sync_cycle == CC_SYNC_SETUP_CYCLE)
         {
             cc_updates_clear();
@@ -195,10 +196,10 @@ static void parser(cc_handle_t *handle)
     }
     else if (handle->comm_state == LISTENING_REQUESTS)
     {
-        if (msg_rx->command == CC_CMD_CHAIN_SYNC)
+        if (msg_rx->command == CC_CMD_CHAIN_SYNC && sync_cycle == CC_SYNC_REGULAR_CYCLE)
         {
             // device id is used to define the communication frame
-            // timer is reseted each sync message
+            // timer is reseted each regular sync message
             timer_set(handle->device_id);
         }
         else if (msg_rx->command == CC_CMD_DEV_CONTROL)
