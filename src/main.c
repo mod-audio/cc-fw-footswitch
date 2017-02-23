@@ -16,7 +16,6 @@
 ****************************************************************************************************
 */
 
-#define BAUD_RATE           115200
 #define FOOTSWITCHES_COUNT  4
 
 #define CLEAR_LINE          "                "
@@ -240,7 +239,7 @@ int main(void)
     }
 
     // init serial
-    g_serial = serial_init(BAUD_RATE, serial_recv);
+    g_serial = serial_init(CC_BAUD_RATE, serial_recv);
 
     while (1)
     {
