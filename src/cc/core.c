@@ -131,10 +131,9 @@ static void parser(cc_handle_t *handle)
         return;
 
     // check if it's setup cycle
-    int sync_cycle;
+    int sync_cycle = msg_rx->data[0];
     if (msg_rx->command == CC_CMD_CHAIN_SYNC)
     {
-        sync_cycle = msg_rx->data[0];
         if (sync_cycle == CC_SYNC_SETUP_CYCLE)
         {
             cc_updates_clear();
@@ -149,7 +148,6 @@ static void parser(cc_handle_t *handle)
         if (msg_rx->command == CC_CMD_CHAIN_SYNC)
         {
             // check if it's handshake sync cycle
-            int sync_cycle = msg_rx->data[0];
             if (sync_cycle == CC_SYNC_HANDSHAKE_CYCLE)
             {
                 // generate handshake
