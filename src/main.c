@@ -79,7 +79,7 @@ static void welcome_message(void)
     clcd_cursor_set(1, CLCD_LINE1, 0);
     clcd_print(1, "FOOTSWITCH EXT.");
     clcd_cursor_set(1, CLCD_LINE2, 0);
-    clcd_print(1, "FW VER: 0.0.0");
+    clcd_print(1, "FW VER: " CC_FIRMWARE_VERSION);
 
     // wait until user to see the message
     delay_ms(3000);
