@@ -16,6 +16,8 @@
 
 #define RX_BUFFER_SIZE  64
 
+#define DRIVER_ENABLE(v)    Chip_GPIO_SetPinState(LPC_GPIO, SERIAL_DE_PORT, SERIAL_DE_PIN, v);
+
 
 /*
 ****************************************************************************************************
@@ -88,8 +90,8 @@ serial_t* serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg))
     // configure pins function
     Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 13, FUNC3);  // TX pin
     Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 14, FUNC3);  // RX pin
-    Chip_GPIO_SetPinDIROutput(LPC_GPIO, 0, 16);     // OE pin
-    Chip_GPIO_SetPinState(LPC_GPIO, 0, 16, 1);
+    Chip_GPIO_SetPinDIROutput(LPC_GPIO, SERIAL_DE_PORT, SERIAL_DE_PIN);
+    DRIVER_ENABLE(0);
 
     // setup serial
     Chip_UART_Init(LPC_USART);
@@ -116,6 +118,15 @@ serial_t* serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg))
 
 void serial_send(serial_t *serial, serial_data_t *sdata)
 {
+    DRIVER_ENABLE(1);
+
+    // wait driver to enable
+    for (volatile int delay = 0; delay < 100; delay++);
+
     if (sdata->size > 0)
         Chip_UART_SendBlocking(LPC_USART, sdata->data, sdata->size);
+
+    while ((Chip_UART_ReadLineStatus(LPC_USART) & UART_LSR_TEMT) == 0);
+
+    DRIVER_ENABLE(0);
 }
