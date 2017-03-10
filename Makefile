@@ -1,4 +1,3 @@
-
 CC := arm-none-eabi-gcc
 
 # tools definitions
@@ -11,6 +10,10 @@ ISP = tools/nxp-usb-isp
 PROJECT = footswitch
 SRC_DIR = src
 OUT_DIR = out
+
+# test definitions
+TEST_NAME = $(PROJECT)-test
+TEST_FILE = $(SRC_DIR)/test.c
 
 # cpu definitions
 CPU = LPC11U24
@@ -47,22 +50,33 @@ LDFLAGS += -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group
 LIBS =
 
 # source and object files
-SRC = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/cpu/$(CPU_SERIES)/*.c) $(wildcard $(SRC_DIR)/cc/*.c)
+SRC = $(subst $(TEST_FILE),,$(wildcard $(SRC_DIR)/*.c))
+SRC += $(wildcard $(SRC_DIR)/cpu/$(CPU_SERIES)/*.c) $(wildcard $(SRC_DIR)/cc/*.c)
 ASM = $(wildcard $(SRC_DIR)/cpu/$(CPU_SERIES)/*.s)
 OBJ = $(SRC:.c=.o) $(ASM:.s=.o)
 ELF = $(OUT_DIR)/$(PROJECT).elf
-BIN = $(OUT_DIR)/$(PROJECT).bin
+TEST_ELF = $(OUT_DIR)/$(TEST_NAME).elf
+TEST_OBJ = $(OBJ:$(SRC_DIR)/main.o=) $(TEST_FILE:.c=.o)
 
 # rules
 all: prebuild $(ELF)
 
+test: all $(TEST_ELF)
+
 prebuild:
+	@echo $(SRC)
 	@mkdir -p $(OUT_DIR)
 
 $(ELF): $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) $(LIBS) -o $@
-	$(OBJCOPY) -O binary $@ $(BIN)
-	$(CHECKSUM) $(BIN)
+	$(OBJCOPY) -O binary $@ $(@:.elf=.bin)
+	$(CHECKSUM) $(@:.elf=.bin)
+	$(SIZE) $@
+
+$(TEST_ELF): $(TEST_OBJ)
+	$(CC) $(TEST_OBJ) $(LDFLAGS) $(LIBS) -o $@
+	$(OBJCOPY) -O binary $@ $(@:.elf=.bin)
+	$(CHECKSUM) $(@:.elf=.bin)
 	$(SIZE) $@
 
 %.o: %.c
@@ -72,7 +86,10 @@ $(ELF): $(OBJ)
 	$(CC) -c -x assembler-with-cpp $(CFLAGS) -o "$@" "$<"
 
 install: all
-	$(ISP) $(BIN)
+	$(ISP) $(OUT_DIR)/$(PROJECT).bin
+
+install-test: test
+	$(ISP) $(OUT_DIR)/$(TEST_NAME).bin
 
 clean:
 	rm -rf $(OBJ) $(OUT_DIR)
