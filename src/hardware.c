@@ -4,6 +4,7 @@
 ****************************************************************************************************
 */
 
+#include <stdlib.h>
 #include "hardware.h"
 #include "chip.h"
 #include "gpio.h"
@@ -103,6 +104,39 @@ void SysTick_Handler(void)
     }
 }
 
+static uint16_t generate_seed(void)
+{
+    // configure pin as ADC
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 15, FUNC2);
+
+    // init and enable ADC using a not connected channel (to read noise)
+    ADC_CLOCK_SETUP_T adc_setup;
+    Chip_ADC_Init(LPC_ADC, &adc_setup);
+    Chip_ADC_EnableChannel(LPC_ADC, ADC_CH4, ENABLE);
+
+    uint16_t seed = 0, data;
+
+    for (int i = 0; i < 8; i++)
+    {
+        // start conversion
+        Chip_ADC_SetStartMode(LPC_ADC, ADC_START_NOW, ADC_TRIGGERMODE_RISING);
+
+        // wait conversion to finish
+        while (Chip_ADC_ReadStatus(LPC_ADC, ADC_CH4, ADC_DR_DONE_STAT) != SET);
+
+        // read ADC
+        Chip_ADC_ReadValue(LPC_ADC, ADC_CH4, &data);
+
+        seed ^= data;
+        delay_us(1);
+    }
+
+    // disable adc
+    Chip_ADC_EnableChannel(LPC_ADC, ADC_CH4, DISABLE);
+
+    return seed;
+}
+
 
 /*
 ****************************************************************************************************
@@ -157,6 +191,9 @@ void hw_init(void)
     }
 
     SysTick_Config(SystemCoreClock / 1000);
+
+    // init random generator
+    srand(generate_seed());
 }
 
 int hw_button(int button)
