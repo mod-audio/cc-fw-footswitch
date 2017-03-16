@@ -107,8 +107,45 @@ static void update_leds(cc_assignment_t *assignment)
 {
     if (assignment->mode == CC_MODE_TOGGLE)
         hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
-    else if (assignment->mode == CC_MODE_TRIGGER)
+    else if (assignment->mode == CC_MODE_TRIGGER ||
+             assignment->mode == CC_MODE_OPTIONS)
         hw_led(assignment->actuator_id, LED_G, LED_ON);
+}
+
+static void update_lcds(cc_assignment_t *assignment)
+{
+    int lcd = (assignment->actuator_id & 0x02) >> 1;
+    int line = assignment->actuator_id & 0x01;
+
+    char buffer[17];
+    int i;
+
+    // init buffer with spaces
+    for (i = 0; i < sizeof(buffer) - 1; i++)
+        buffer[i] = ' ';
+
+    // copy assignment label
+    for (i = 0; i < assignment->label.size; i++)
+        buffer[i] = assignment->label.text[i];
+
+    // copy item label if it's option mode
+    if (assignment->mode & CC_MODE_OPTIONS)
+    {
+        // separator
+        buffer[i++] = ':';
+
+        // copy item label
+        str16_t *item_label = &assignment->list_items[assignment->list_index]->label;
+        for (int j = 0; j < item_label->size && i < sizeof(buffer); j++, i++)
+            buffer[i] = item_label->text[j];
+    }
+
+    // make buffer null-terminated
+    buffer[sizeof(buffer) - 1] = 0;
+
+    // print buffer to lcd
+    clcd_cursor_set(lcd, line, 0);
+    clcd_print(lcd, buffer);
 }
 
 static void serial_recv(void *arg)
@@ -152,18 +189,8 @@ static void events_cb(void *arg)
     {
         cc_assignment_t *assignment = event->data;
 
-        int lcd = (assignment->actuator_id & 0x02) >> 1;
-        int line = assignment->actuator_id & 0x01;
-
-        // clear lcd line
-        clcd_cursor_set(lcd, line, 0);
-        clcd_print(lcd, CLEAR_LINE);
-
-        // print assignment label
-        clcd_cursor_set(lcd, line, 0);
-        clcd_print(lcd, assignment->label.text);
-
         update_leds(assignment);
+        update_lcds(assignment);
     }
     else if (event->id == CC_EV_UNASSIGNMENT)
     {
@@ -188,6 +215,7 @@ static void events_cb(void *arg)
     {
         cc_assignment_t *assignment = event->data;
         update_leds(assignment);
+        update_lcds(assignment);
     }
     else if (event->id == CC_EV_MASTER_RESETED)
     {
