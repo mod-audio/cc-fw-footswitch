@@ -259,7 +259,7 @@ int main(void)
         actuator_config.value = &g_foot_value[i];
         actuator_config.min = 0.0;
         actuator_config.max = 1.0;
-        actuator_config.supported_modes = CC_MODE_TOGGLE | CC_MODE_TRIGGER;
+        actuator_config.supported_modes = CC_MODE_TOGGLE | CC_MODE_TRIGGER | CC_MODE_OPTIONS;
         actuator_config.max_assignments = 1;
 
         cc_actuator_t *actuator = cc_actuator_new(&actuator_config);
