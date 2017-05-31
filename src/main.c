@@ -105,11 +105,10 @@ static void turn_off_leds(void)
 
 static void update_leds(cc_assignment_t *assignment)
 {
-    if (assignment->mode == CC_MODE_TOGGLE)
-        hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
-    else if (assignment->mode == CC_MODE_TRIGGER ||
-             assignment->mode == CC_MODE_OPTIONS)
+    if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
         hw_led(assignment->actuator_id, LED_G, LED_ON);
+    else if (assignment->mode & CC_MODE_TOGGLE)
+        hw_led(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF);
 }
 
 static void update_lcds(cc_assignment_t *assignment)
