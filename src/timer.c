@@ -68,14 +68,14 @@ void timer_init(void (*callback)(void))
     g_callback = callback;
 }
 
-void timer_set(uint32_t time_ms)
+void timer_set(uint32_t time_us)
 {
     Chip_TIMER_Disable(LPC_TIMER32_0);
     Chip_TIMER_Reset(LPC_TIMER32_0);
 
     // timer rate is system clock rate
     uint32_t timer_freq = Chip_Clock_GetSystemClockRate();
-    Chip_TIMER_SetMatch(LPC_TIMER32_0, 1, timer_freq / (1000 / time_ms));
+    Chip_TIMER_SetMatch(LPC_TIMER32_0, 1, timer_freq / (1000000 / time_us));
 
     Chip_TIMER_Enable(LPC_TIMER32_0);
 }
