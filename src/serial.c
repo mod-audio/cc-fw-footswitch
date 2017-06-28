@@ -130,3 +130,8 @@ void serial_send(serial_t *serial, serial_data_t *sdata)
 
     DRIVER_ENABLE(0);
 }
+
+void serial_baud_rate_set(uint32_t baud_rate)
+{
+    Chip_UART_SetBaud(LPC_USART, baud_rate);
+}

@@ -43,6 +43,7 @@
 
 static serial_t *g_serial;
 static float g_foot_value[FOOTSWITCHES_COUNT];
+static unsigned int g_welcome_timeout = 1000000;
 
 
 /*
@@ -80,17 +81,6 @@ static void welcome_message(void)
     clcd_print(1, "FOOTSWITCH EXT.");
     clcd_cursor_set(1, CLCD_LINE2, 0);
     clcd_print(1, "FW VER: " CC_FIRMWARE_VERSION);
-
-    // wait until user to see the message
-    delay_ms(3000);
-
-    // clear displays
-    clcd_clear(0);
-    clcd_clear(1);
-
-    // print waiting message for all footswitches
-    for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
-        waiting_message(i);
 }
 
 static void turn_off_leds(void)
@@ -101,6 +91,19 @@ static void turn_off_leds(void)
         hw_led(i, LED_G, LED_OFF);
         hw_led(i, LED_B, LED_OFF);
     }
+}
+
+static void clear_all(void)
+{
+    turn_off_leds();
+
+    // clear displays
+    clcd_clear(0);
+    clcd_clear(1);
+
+    // print waiting message for all footswitches
+    for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
+        waiting_message(i);
 }
 
 static void update_leds(cc_assignment_t *assignment)
@@ -150,7 +153,10 @@ static void update_lcds(cc_assignment_t *assignment)
 static void serial_recv(void *arg)
 {
     cc_data_t *data = arg;
-    cc_parse(data);
+
+    // use baud rate fallback option if parse failed many times
+    if (cc_parse(data) < 0)
+        serial_baud_rate_set(CC_BAUD_RATE_FALLBACK);
 }
 
 static void response_cb(void *arg)
@@ -188,6 +194,13 @@ static void events_cb(void *arg)
     {
         cc_assignment_t *assignment = event->data;
 
+        // force cleaning if still on welcome message
+        if (g_welcome_timeout > 0)
+        {
+            g_welcome_timeout = 0;
+            clear_all();
+        }
+
         update_leds(assignment);
         update_lcds(assignment);
     }
@@ -218,14 +231,7 @@ static void events_cb(void *arg)
     }
     else if (event->id == CC_EV_MASTER_RESETED)
     {
-        // clear displays and leds
-        clcd_clear(0);
-        clcd_clear(1);
-        turn_off_leds();
-
-        // print waiting message for all footswitches
-        for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
-            waiting_message(i);
+        clear_all();
     }
 }
 
@@ -270,6 +276,12 @@ int main(void)
 
     while (1)
     {
+        if (g_welcome_timeout > 0)
+        {
+            if (--g_welcome_timeout == 0)
+                clear_all();
+        }
+
         for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
         {
             int button_status = hw_button(i);
