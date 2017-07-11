@@ -154,9 +154,9 @@ static void serial_recv(void *arg)
 {
     cc_data_t *data = arg;
 
-    // use baud rate fallback option if parse failed many times
+    // use regular baud rate option if parse failed many times
     if (cc_parse(data) < 0)
-        serial_baud_rate_set(CC_BAUD_RATE_FALLBACK);
+        serial_baud_rate_set(CC_BAUD_RATE);
 }
 
 static void response_cb(void *arg)
@@ -272,7 +272,7 @@ int main(void)
     }
 
     // init serial
-    g_serial = serial_init(CC_BAUD_RATE, serial_recv);
+    g_serial = serial_init(CC_BAUD_RATE_FALLBACK, serial_recv);
 
     while (1)
     {
