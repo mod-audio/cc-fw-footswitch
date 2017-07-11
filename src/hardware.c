@@ -104,35 +104,34 @@ void SysTick_Handler(void)
     }
 }
 
-static uint16_t generate_seed(void)
+// read unique id via IAP
+static void read_uid(uint32_t *ptr)
 {
-    // configure pin as ADC
-    Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 15, FUNC2);
+    unsigned int param_table[5];
+    unsigned int result_table[5];
 
-    // init and enable ADC using a not connected channel (to read noise)
-    ADC_CLOCK_SETUP_T adc_setup;
-    Chip_ADC_Init(LPC_ADC, &adc_setup);
-    Chip_ADC_EnableChannel(LPC_ADC, ADC_CH4, ENABLE);
+    param_table[0] = 58; // IAP command
+    iap_entry(param_table, result_table);
 
-    uint16_t seed = 0, data;
-
-    for (int i = 0; i < 8; i++)
+    if(result_table[0] == 0)
     {
-        // start conversion
-        Chip_ADC_SetStartMode(LPC_ADC, ADC_START_NOW, ADC_TRIGGERMODE_RISING);
-
-        // wait conversion to finish
-        while (Chip_ADC_ReadStatus(LPC_ADC, ADC_CH4, ADC_DR_DONE_STAT) != SET);
-
-        // read ADC
-        Chip_ADC_ReadValue(LPC_ADC, ADC_CH4, &data);
-
-        seed ^= data;
-        delay_us(1);
+        ptr[0] = result_table[1];
+        ptr[1] = result_table[2];
+        ptr[2] = result_table[3];
+        ptr[3] = result_table[4];
     }
+}
 
-    // disable adc
-    Chip_ADC_EnableChannel(LPC_ADC, ADC_CH4, DISABLE);
+static unsigned int generate_seed(void)
+{
+    uint32_t uid[4] = {0, 0, 0, 0};
+    read_uid(uid);
+
+    uint32_t seed = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        seed ^= uid[i];
+    }
 
     return seed;
 }
