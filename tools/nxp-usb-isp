@@ -93,13 +93,16 @@ do
 				if [[ $? -ne 0 ]]; then
 					if [[ $(command -v udisks) > /dev/null ]]; then
 						udisks --mount $disk
-						volpath=$(mount | grep "^$disk " | sed 's/ type.*//g' | cut -d' ' -f3-)
+					elif [[ $(command -v udiskie) > /dev/null ]]; then
+						udiskie-mount $disk
 					else
-						echo "Found device but it appears to be unmounted."
+						echo "Device found but it appears to be unmounted."
 						echo "Please mount the partition and try the update again."
 						echo "Alternatively, install udisks command to mount it automatically."
 						exit 1
 					fi
+
+					volpath=$(mount | grep "^$disk " | sed 's/ type.*//g' | cut -d' ' -f3-)
 				fi
 			fi
 
@@ -112,7 +115,7 @@ do
 			# get the firmware sizes as a sanity check
 			fwsize=$(stat -c %s "$volpath")
 			newfwsize=$(stat -c %s "$1")
-			echo "LPC ISP flash size / new firmware size: $fwsize $newfwsize"
+			echo "LPC ISP flash size / new firmware size: $fwsize / $newfwsize"
 
 			# Get volume label from mount command. This is used to check
 			# for code protect. This is a non-standard extension to mount
