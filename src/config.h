@@ -3,8 +3,8 @@
 
 // define firmware version
 #define CC_FIRMWARE_MAJOR   0
-#define CC_FIRMWARE_MINOR   2
-#define CC_FIRMWARE_MICRO   2
+#define CC_FIRMWARE_MINOR   3
+#define CC_FIRMWARE_MICRO   0
 
 // maximum number of devices that can be created
 #define CC_MAX_DEVICES          1

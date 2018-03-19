@@ -8,6 +8,7 @@
 #include "serial.h"
 #include "clcd.h"
 #include "control_chain.h"
+#include "self_test.h"
 
 
 /*
@@ -80,7 +81,11 @@ static void welcome_message(void)
     clcd_cursor_set(1, CLCD_LINE1, 0);
     clcd_print(1, "FOOTSWITCH EXT.");
     clcd_cursor_set(1, CLCD_LINE2, 0);
-    clcd_print(1, "FW VER: " CC_FIRMWARE_VERSION);
+
+    if (hw_self_test())
+        clcd_print(1, "SELF-TEST MODE");
+    else
+        clcd_print(1, "FW VER: " CC_FIRMWARE_VERSION);
 }
 
 static void turn_off_leds(void)
@@ -246,6 +251,11 @@ int main(void)
 {
     hw_init();
     welcome_message();
+
+    // execute self-test if required
+    // the device never leaves the self-test routine
+    if (hw_self_test())
+        self_test_run();
 
     // init and create device
     cc_init(response_cb, events_cb);

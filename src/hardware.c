@@ -55,7 +55,7 @@ static const gpio_t g_buttons_gpio[] = {BUTTONS_PINS};
 static const gpio_t g_leds_gpio[] = {LEDS_PINS};
 static const gpio_t g_backlights_gpio[] = {BACKLIGHTS_PINS};
 static button_t g_buttons[N_BUTTONS];
-static uint32_t g_counter;
+static uint32_t g_counter, g_self_test;
 
 
 /*
@@ -193,6 +193,14 @@ void hw_init(void)
 
     // init random generator
     srand(generate_seed());
+
+    // wait some time to read the buttons
+    delay_ms(100);
+
+    // check if should start in self-test mode
+    int foot3 = hw_button(2), foot4 = hw_button(3);
+    if (foot3 == BUTTON_PRESSED && foot4 == BUTTON_PRESSED)
+        g_self_test = 1;
 }
 
 int hw_button(int button)
@@ -218,4 +226,9 @@ void hw_led(int led, int color, int value)
 inline uint32_t hw_uptime(void)
 {
     return g_counter;
+}
+
+inline int hw_self_test(void)
+{
+    return g_self_test;
 }

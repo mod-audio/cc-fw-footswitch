@@ -4,6 +4,7 @@
 ****************************************************************************************************
 */
 
+#include "self_test.h"
 #include "hardware.h"
 #include "serial.h"
 #include "clcd.h"
@@ -17,7 +18,6 @@
 */
 
 #define FOOTSWITCHES_COUNT  4
-
 #define CLEAR_LINE          "                "
 
 
@@ -59,7 +59,7 @@ static void all_leds(int color, int status)
 static void serial_recv(void *arg)
 {
     static char buffer[24];
-    static int index;
+    static int index, count, j;
 
     cc_data_t *msg = arg;
 
@@ -71,6 +71,22 @@ static void serial_recv(void *arg)
         {
             clcd_cursor_set(0, CLCD_LINE1, 0);
             clcd_print(0, buffer);
+
+            // animation
+            if (count++ >= 30)
+            {
+                clcd_cursor_set(0, CLCD_LINE2, 0);
+                clcd_print(0, CLEAR_LINE);
+
+                clcd_cursor_set(0, CLCD_LINE2, j++);
+                clcd_print(0, "*");
+
+                if (j == 16)
+                    j = 0;
+
+                count = 0;
+            }
+
             index = 0;
         }
     }
@@ -83,25 +99,10 @@ static void serial_recv(void *arg)
 ****************************************************************************************************
 */
 
-int main(void)
+void self_test_run(void)
 {
-    hw_init();
-
     g_serial = serial_init(CC_BAUD_RATE, serial_recv);
-
-    // message display 1
-    clcd_cursor_set(0, CLCD_LINE1, 0);
-    clcd_print(0, "MOD DEVICES");
-    clcd_cursor_set(0, CLCD_LINE2, 0);
-    clcd_print(0, "CONTROL CHAIN");
-
-    // message display 2
-    clcd_cursor_set(1, CLCD_LINE1, 0);
-    clcd_print(1, "FOOTSWITCH EXT.");
-    clcd_cursor_set(1, CLCD_LINE2, 0);
-    clcd_print(1, "FW VER: " CC_FIRMWARE_VERSION);
-
-    delay_ms(1000);
+    delay_ms(2000);
 
     // test red leds
     all_leds(LED_R, LED_ON);
@@ -147,14 +148,37 @@ int main(void)
             int button_status = hw_button(i);
             if (button_status == BUTTON_PRESSED)
             {
-                state[i] = 1 - state[i];
-                hw_led(i, LED_R, state[i]);
+                state[i]++;
+
+                if (state[i] == 1)
+                {
+                    hw_led(i, LED_R, 1);
+                    hw_led(i, LED_G, 0);
+                    hw_led(i, LED_B, 0);
+                }
+                else if (state[i] == 2)
+                {
+                    hw_led(i, LED_R, 0);
+                    hw_led(i, LED_G, 1);
+                    hw_led(i, LED_B, 0);
+                }
+                else if (state[i] == 3)
+                {
+                    hw_led(i, LED_R, 0);
+                    hw_led(i, LED_G, 0);
+                    hw_led(i, LED_B, 1);
+                }
+                else if (state[i] == 4)
+                {
+                    hw_led(i, LED_R, 0);
+                    hw_led(i, LED_G, 0);
+                    hw_led(i, LED_B, 0);
+                    state[i] = 0;
+                }
             }
         }
 
         serial_send(g_serial, &msg);
         delay_ms(5);
     }
-
-    return 0;
 }
