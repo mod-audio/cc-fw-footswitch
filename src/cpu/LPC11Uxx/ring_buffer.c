@@ -111,6 +111,11 @@ int RingBuffer_InsertMult(RINGBUFF_T *RingBuff, const void *data, int num)
 	memcpy(ptr, data, cnt2 * RingBuff->itemSz);
 	RingBuff->head += cnt2;
 
+#ifdef CCC_ANALYZER
+	// make static analyzer happy
+	(void)num;
+#endif
+
 	return cnt1 + cnt2;
 }
 
@@ -162,6 +167,11 @@ int RingBuffer_PopMult(RINGBUFF_T *RingBuff, void *data, int num)
 	data = (uint8_t *) data + cnt1 * RingBuff->itemSz;
 	memcpy(data, ptr, cnt2 * RingBuff->itemSz);
 	RingBuff->tail += cnt2;
+
+#ifdef CCC_ANALYZER
+	// make static analyzer happy
+	(void)num;
+#endif
 
 	return cnt1 + cnt2;
 }

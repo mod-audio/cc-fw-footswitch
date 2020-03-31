@@ -296,7 +296,9 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE void __NOP(void)
  */
 __attribute__( ( always_inline ) ) __STATIC_INLINE void __WFI(void)
 {
+#ifndef CCC_ANALYZER
   __ASM volatile ("wfi");
+#endif
 }
 
 

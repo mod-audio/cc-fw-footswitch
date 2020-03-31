@@ -44,7 +44,7 @@
  */
 typedef struct {
 	void *data;
-	int count;
+	uint32_t count;
 	int itemSz;
 	uint32_t head;
 	uint32_t tail;
@@ -100,7 +100,7 @@ STATIC INLINE int RingBuffer_GetSize(RINGBUFF_T *RingBuff)
  * @param	RingBuff	: Pointer to ring buffer
  * @return	Number of items in the ring buffer
  */
-STATIC INLINE int RingBuffer_GetCount(RINGBUFF_T *RingBuff)
+STATIC INLINE uint32_t RingBuffer_GetCount(RINGBUFF_T *RingBuff)
 {
 	return RB_VHEAD(RingBuff) - RB_VTAIL(RingBuff);
 }
