@@ -26,14 +26,19 @@ endif
 # include directories
 INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc
 
-# general flags
-CFLAGS += $(INC) -Wall -std=gnu99
-CFLAGS += -fno-builtin -ffunction-sections -fdata-sections
 # cpu related flags
 CPU_FLAGS = -mthumb -mcpu=$(CPU_CORE)
-CFLAGS += $(CPU_FLAGS)
+
+# general flags
+CFLAGS += $(INC) -Wall -Wextra -Wpointer-arith -Wredundant-decls -std=gnu99
+CFLAGS += -fno-builtin -ffunction-sections -fdata-sections
 # lpcopen required definitions
 CFLAGS += -DCORE_M0
+ifeq ($(CCC_ANALYZER_OUTPUT_FORMAT),)
+CFLAGS += $(CPU_FLAGS)
+else
+CFLAGS += -DCCC_ANALYZER -Wshadow -Wno-attributes
+endif
 
 # linker flags
 MAP_FILE = $(OUT_DIR)/$(PROJECT).map
@@ -67,6 +72,10 @@ $(ELF): $(OBJ)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+# ignore warnings for 3rd-party CPU code
+src/cpu/%.o: src/cpu/%.c
+	$(CC) $(CFLAGS) -o $@ -c $< -Wno-unused-parameter
 
 %.o: %.s
 	$(CC) -c -x assembler-with-cpp $(CFLAGS) -o "$@" "$<"
