@@ -83,7 +83,7 @@ $(ELF): $(OBJ)
 
 # ignore warnings for 3rd-party CPU code
 src/cpu/%.o: src/cpu/%.c
-	$(CC) $(CFLAGS) -o $@ -c $< -Wno-unused-parameter
+	$(CC) $(CFLAGS) -o $@ -c $< -Wno-unused-parameter -Wno-implicit-fallthrough
 
 %.o: %.s
 	$(CC) -c -x assembler-with-cpp $(CFLAGS) -o "$@" "$<"
