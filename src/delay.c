@@ -64,6 +64,7 @@ inline void delay_us(uint32_t us)
      * for Teensy 3.0 (http://www.pjrc.com/)
      */
     if (us == 0) return;
+#ifndef CCC_ANALYZER
     uint32_t n = us * g_factor;
     asm(".syntax unified");
     asm volatile(
@@ -73,6 +74,7 @@ inline void delay_us(uint32_t us)
         : "+r" (n) :
     );
     asm(".syntax divided");
+#endif
 }
 
 void delay_ms(uint32_t ms)

@@ -40,12 +40,20 @@ else
 CFLAGS += -DCCC_ANALYZER -Wshadow -Wno-attributes
 endif
 
-# linker flags
-MAP_FILE = $(OUT_DIR)/$(PROJECT).map
+# linker files
+MAP_FILE    = $(OUT_DIR)/$(PROJECT).map
 LINKER_FILE = $(SRC_DIR)/cpu/$(CPU_SERIES)/$(CPU).ld
-LDFLAGS += -nostdlib -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE) -Xlinker --gc-sections
+
+# linker flags
+LDFLAGS += -nostdlib
+LDFLAGS += -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE) 
+LDFLAGS += -Xlinker --gc-sections
+ifeq ($(CCC_ANALYZER_OUTPUT_FORMAT),)
 LDFLAGS += $(CPU_FLAGS) -specs=nano.specs
 LDFLAGS += -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group
+else
+LDFLAGS += -lc -lm
+endif
 
 # libraries
 LIBS =
