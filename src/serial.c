@@ -118,6 +118,8 @@ serial_t* serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg))
 
 void serial_send(serial_t *serial, serial_data_t *sdata)
 {
+    (void) serial;
+    
     DRIVER_ENABLE(1);
 
     // wait driver to enable

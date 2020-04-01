@@ -55,7 +55,7 @@ static float g_foot_value[MAX_PAGES][FOOTSWITCHES_COUNT];
 static unsigned int g_welcome_timeout = 10; //1000000;
 static uint8_t g_current_page = 0;
 static uint8_t g_pages_count = 0;
-static uint8_t g_foots_assigned[MAX_PAGES * FOOTSWITCHES_COUNT];
+static int8_t g_foots_assigned[MAX_PAGES * FOOTSWITCHES_COUNT];
 static struct TAP_TEMPO_T g_tap_tempo[MAX_PAGES * FOOTSWITCHES_COUNT];
 
 /*
@@ -354,7 +354,7 @@ static void update_lcds(cc_assignment_t *assignment)
     }
 
     char buffer[17];
-    int i;
+    uint8_t i;
 
     // init buffer with spaces
     for (i = 0; i < sizeof(buffer) - 1; i++)

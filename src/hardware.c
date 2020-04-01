@@ -50,7 +50,7 @@ typedef struct button_t {
 
 typedef struct blinking_led_t {
     uint8_t state;
-    uint8_t color[N_LEDS];
+    int8_t color[N_LEDS];
     uint16_t on_time, off_time, time;
 } blinking_led_t;
 
@@ -75,7 +75,7 @@ void SysTick_Handler(void)
 {
     g_counter++;
 
-    for (int i = 0; i < N_BUTTONS; i++)
+    for (uint8_t i = 0; i < N_BUTTONS; i++)
     {
         const gpio_t *gpio = &g_buttons_gpio[i];
         button_t *button = &g_buttons[i];
@@ -109,7 +109,7 @@ void SysTick_Handler(void)
         }
     }
 
-    for (int i = 0; i < N_LEDS; i++)
+    for (uint8_t i = 0; i < N_LEDS; i++)
     {
         blinking_led_t *led = &g_blinking_led[i];
         
@@ -177,7 +177,7 @@ static unsigned int generate_seed(void)
     read_uid(uid);
 
     uint32_t seed = 0;
-    for (int i = 0; i < 4; i++)
+    for (uint8_t i = 0; i < 4; i++)
     {
         seed ^= uid[i];
     }
@@ -209,7 +209,7 @@ void hw_init(void)
     delay_init();
 
     // leds
-    for (int i = 0; i < N_LEDS; i++)
+    for (uint8_t i = 0; i < N_LEDS; i++)
     {
         const gpio_t *gpio = &g_leds_gpio[i];
         Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio->port, gpio->pin);
@@ -217,7 +217,7 @@ void hw_init(void)
     }
 
     // buttons
-    for (int i = 0; i < N_BUTTONS; i++)
+    for (uint8_t i = 0; i < N_BUTTONS; i++)
     {
         const gpio_t *gpio = &g_buttons_gpio[i];
         Chip_GPIO_SetPinDIRInput(LPC_GPIO, gpio->port, gpio->pin);
@@ -231,7 +231,7 @@ void hw_init(void)
     clcd_init(CLCD_4BIT | CLCD_2LINE, &lcd2_gpio);
 
     // backlights
-    for (int i = 0; i < N_BACKLIGHTS; i++)
+    for (uint8_t i = 0; i < N_BACKLIGHTS; i++)
     {
         const gpio_t *gpio = &g_backlights_gpio[i];
         Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio->port, gpio->pin);
@@ -279,47 +279,49 @@ void hw_led_set(int led, int color, int value, int on_time_ms, int off_time_ms)
 {
     int colors[3] = {color, 0, 0};
 
-    if (color == LED_W)
+    switch (color)
     {
-        colors[0] = LED_R;
-        colors[1] = LED_G;   
-        colors[2] = LED_B;
-    }
-    else if (color == LED_Y)
-    {
-        colors[0] = LED_R;
-        colors[1] = LED_G;
-        colors[2] = -1;   
-    }
-    else if(color == LED_C)
-    {
-        colors[0] = LED_B;
-        colors[1] = LED_G;
-        colors[2] = -1;   
-    }
-    else if (color == LED_M)
-    {
-        colors[0] = LED_R;
-        colors[1] = LED_B;
-        colors[2] = -1;   
-    }
-    else if (color == LED_R)
-    {
-        colors[0] = LED_R;
-        colors[1] = -1;
-        colors[2] = -1;   
-    }
-    else if (color == LED_G)
-    {
-        colors[0] = -1;
-        colors[1] = -1;
-        colors[2] = LED_G;   
-    }
-    else if (color == LED_B)
-    {
-        colors[0] = -1;
-        colors[1] = LED_B;
-        colors[2] = -1;   
+        case LED_W:
+            colors[0] = LED_R;
+            colors[1] = LED_G;   
+            colors[2] = LED_B;
+        break;
+
+        case LED_Y:
+            colors[0] = LED_R;
+            colors[1] = LED_G;
+            colors[2] = -1; 
+        break;
+
+        case LED_C:
+            colors[0] = LED_B;
+            colors[1] = LED_G;
+            colors[2] = -1;  
+        break;
+
+        case LED_M:
+            colors[0] = LED_R;
+            colors[1] = LED_B;
+            colors[2] = -1;   
+        break;
+
+        case LED_R:
+            colors[0] = LED_R;
+            colors[1] = -1;
+            colors[2] = -1;   
+        break;
+
+        case LED_G:
+            colors[0] = -1;
+            colors[1] = -1;
+            colors[2] = LED_G;    
+        break;
+
+        case LED_B:
+            colors[0] = -1;
+            colors[1] = LED_B;
+            colors[2] = -1;  
+        break;
     }
 
     for (uint8_t j=0; j < 3; j++)

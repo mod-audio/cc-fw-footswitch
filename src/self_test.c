@@ -63,7 +63,7 @@ static void serial_recv(void *arg)
 
     cc_data_t *msg = arg;
 
-    for (int i = 0; i < msg->size; i++)
+    for (uint32_t i = 0; i < msg->size; i++)
     {
         buffer[index++] = msg->data[i];
 
