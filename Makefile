@@ -37,7 +37,7 @@ CFLAGS += -DCORE_M0
 ifeq ($(CCC_ANALYZER_OUTPUT_FORMAT),)
 CFLAGS += $(CPU_FLAGS)
 else
-CFLAGS += -DCCC_ANALYZER -Wshadow -Wno-attributes
+CFLAGS += -DCCC_ANALYZER -Wshadow -Wno-attributes -m32
 endif
 
 # linker files
@@ -46,13 +46,13 @@ LINKER_FILE = $(SRC_DIR)/cpu/$(CPU_SERIES)/$(CPU).ld
 
 # linker flags
 LDFLAGS += -nostdlib
-LDFLAGS += -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE) 
 LDFLAGS += -Xlinker --gc-sections
 ifeq ($(CCC_ANALYZER_OUTPUT_FORMAT),)
+LDFLAGS += -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE)
 LDFLAGS += $(CPU_FLAGS) -specs=nano.specs
 LDFLAGS += -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group
 else
-LDFLAGS += -lc -lm
+LDFLAGS += -lc -lm -m32
 endif
 
 # libraries
@@ -74,9 +74,11 @@ prebuild:
 
 $(ELF): $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) $(LIBS) -o $@
+ifeq ($(CCC_ANALYZER_OUTPUT_FORMAT),)
 	$(OBJCOPY) -O binary $@ $(@:.elf=.bin)
 	$(CHECKSUM) $(@:.elf=.bin)
 	$(SIZE) $@
+endif
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
