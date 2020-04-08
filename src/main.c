@@ -561,3 +561,7 @@ int main(void)
     return 0;
 }
 
+#ifdef CCC_ANALYZER
+// needed for the static analyzer to link properly
+void _start(void) {}
+#endif
