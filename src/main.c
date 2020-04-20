@@ -172,6 +172,26 @@ static void handle_tap_tempo(uint8_t actuator_id)
     }
 }
 
+static uint8_t get_page_color(uint8_t current_page)
+{
+    switch (current_page)
+    {
+        case 0:
+            return LED_M;
+        break;
+
+        case 1:
+            return LED_Y;
+        break;
+
+        case 2:
+            return LED_C;
+        break;
+    }
+
+    return LED_W;
+}
+
 static uint8_t get_actuator_page(int actuator_id)
 {
     if (actuator_id < 1*(FOOTSWITCHES_COUNT-1))
@@ -202,7 +222,7 @@ static void waiting_message(int foot)
         clcd_cursor_set(lcd, line, 0);
         clcd_print(lcd, text);
 
-        hw_led_set(foot, LED_W, LED_ON, 0,0);
+        hw_led_set(foot, get_page_color(g_current_page), LED_ON, 0,0);
     }
     else if (g_pages_count == 1)
     {
@@ -730,9 +750,11 @@ int main(void)
                 }
                 else if ((i == 0) && (button_status == BUTTON_RELEASED))
                 {
+                    hw_led_set(i, LED_W, LED_OFF, 0, 0);
+
                     if (prev_footswitch_state[i])
                     {
-                        hw_led_set(i, LED_W, LED_ON, 0, 0);
+                        hw_led_set(i, get_page_color(g_current_page), LED_ON, 0,0);
                         prev_footswitch_state[i] = 0;		
                     }
                 }
