@@ -741,9 +741,8 @@ int main(void)
                     //update leds and stuff
                     set_actuator_page(g_current_page);
 
-                    //make LED red
-                    hw_led_set(i, LED_W, LED_OFF, 0, 0);
-                    hw_led_set(i, LED_R, LED_ON, 0, 0); 
+                    //make LED white
+                    hw_led_set(i, LED_W, LED_ON, 0, 0); 
 
                     prev_footswitch_state[i] = 1;
 
