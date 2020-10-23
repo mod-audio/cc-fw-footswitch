@@ -53,7 +53,7 @@ static serial_t *g_serial;
 static void all_leds(int color, int status)
 {
     for (int i = 0; i < FOOTSWITCHES_COUNT; ++i)
-        hw_led(i, color, status);
+        hw_led_set(i, color, status,0,0);
 }
 
 static void serial_recv(void *arg)
@@ -152,27 +152,27 @@ void self_test_run(void)
 
                 if (state[i] == 1)
                 {
-                    hw_led(i, LED_R, 1);
-                    hw_led(i, LED_G, 0);
-                    hw_led(i, LED_B, 0);
+                    hw_led_set(i, LED_R, 1,0,0);
+                    hw_led_set(i, LED_G, 0,0,0);
+                    hw_led_set(i, LED_B, 0,0,0);
                 }
                 else if (state[i] == 2)
                 {
-                    hw_led(i, LED_R, 0);
-                    hw_led(i, LED_G, 1);
-                    hw_led(i, LED_B, 0);
+                    hw_led_set(i, LED_R, 0,0,0);
+                    hw_led_set(i, LED_G, 1,0,0);
+                    hw_led_set(i, LED_B, 0,0,0);
                 }
                 else if (state[i] == 3)
                 {
-                    hw_led(i, LED_R, 0);
-                    hw_led(i, LED_G, 0);
-                    hw_led(i, LED_B, 1);
+                    hw_led_set(i, LED_R, 0,0,0);
+                    hw_led_set(i, LED_G, 0,0,0);
+                    hw_led_set(i, LED_B, 1,0,0);
                 }
                 else if (state[i] == 4)
                 {
-                    hw_led(i, LED_R, 0);
-                    hw_led(i, LED_G, 0);
-                    hw_led(i, LED_B, 0);
+                    hw_led_set(i, LED_R, 0,0,0);
+                    hw_led_set(i, LED_G, 0,0,0);
+                    hw_led_set(i, LED_B, 0,0,0);
                     state[i] = 0;
                 }
             }
