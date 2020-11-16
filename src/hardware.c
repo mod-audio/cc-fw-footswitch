@@ -59,9 +59,7 @@ typedef struct blinking_led_t {
 */
 
 static button_t g_buttons[N_BUTTONS];
-static uint32_t g_counter, g_self_test,
-
-g_settings_mode;// probably pages 
+static uint32_t g_counter, g_self_test;
 static blinking_led_t g_blinking_led[N_LEDS];
 
 /*
@@ -337,10 +335,6 @@ void hw_led_set(int led, int color, int value, int on_time_ms, int off_time_ms)
     }
 }
 
-inline int hw_settings_mode(void)
-{
-    return g_settings_mode;
-}
 
 inline uint32_t hw_uptime(void)
 {

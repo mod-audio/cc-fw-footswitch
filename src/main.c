@@ -52,6 +52,7 @@ static serial_t *g_serial;
 static float g_foot_value[FOOTSWITCHES_COUNT];
 static unsigned int g_welcome_timeout = 1000000;
 static struct TAP_TEMPO_T g_tap_tempo[FOOTSWITCHES_COUNT];
+static cc_assignment_t *g_current_assignment[FOOTSWITCHES_COUNT];
 
 /*
 ****************************************************************************************************
@@ -231,11 +232,30 @@ static void clear_all(void)
 static void update_leds(cc_assignment_t *assignment)
 {
     if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
-        hw_led_set(assignment->actuator_id, LED_G, LED_ON,0,0);
+    { 
+        if (assignment->list_bitmask & LIST_MODE_LED_CYCLING)
+        {   
+            uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
+            
+            //turn off previous colour
+            hw_led_set(assignment->actuator_id, (color == 0) ? LED_W : color-1, LED_OFF, 0, 0);
+
+            hw_led_set(assignment->actuator_id, color, LED_ON, 0, 0);
+        }
+        else
+        {  
+
+          hw_led_set(assignment->actuator_id, LED_G, LED_ON,0,0);                       
+
+        }
+        
+    }
     else if (assignment->mode & CC_MODE_TOGGLE)
         hw_led_set(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF,0,0);
      else if (assignment->mode & CC_MODE_TAP_TEMPO)
-            hw_led_set(assignment->actuator_id, LED_G, LED_ON, TAP_TEMPO_TIME_ON,(convert_to_ms(assignment->unit.text, assignment->value) - TAP_TEMPO_TIME_ON));
+        hw_led_set(assignment->actuator_id, LED_G, LED_ON, TAP_TEMPO_TIME_ON,(convert_to_ms(assignment->unit.text, assignment->value) - TAP_TEMPO_TIME_ON));
+        else if (assignment->mode & CC_MODE_MOMENTARY)
+            hw_led_set(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF,0,0);
 }
 
 static void update_lcds(cc_assignment_t *assignment)
@@ -348,19 +368,19 @@ static void events_cb(void *arg)
         }
     }
     else if (event->id == CC_EV_ASSIGNMENT)
-    { 
+    {   
         // force cleaning if still on welcome message
         if (g_welcome_timeout > 0)
         {
             g_welcome_timeout = 0;
             clear_all();
         }
+
         int *act_id = event->data;
         int actuator_id = *act_id;
 
         cc_assignment_t *assignment = cc_assignment_get(actuator_id);
-
-         
+        g_current_assignment[actuator_id] = assignment;
 
         if (assignment->mode & CC_MODE_TAP_TEMPO)
         {
@@ -395,6 +415,7 @@ static void events_cb(void *arg)
                 g_tap_tempo[assignment->actuator_id].state = TT_COUNTING;
             }
         }
+
         update_leds(assignment);
         update_lcds(assignment);
     }
@@ -435,7 +456,7 @@ static void events_cb(void *arg)
         cc_assignment_t *assignment = cc_assignment_get(set_value->actuator_id);
         assignment->value = set_value->value;
         update_leds(assignment);
-            update_lcds(assignment);
+        update_lcds(assignment);
     }
 
     else if (event->id == CC_EV_MASTER_RESETED)
@@ -485,7 +506,7 @@ int main(void)
         actuator_config.value = &g_foot_value[i];
         actuator_config.min = 0.0;
         actuator_config.max = 1.0;
-        actuator_config.supported_modes = CC_MODE_TOGGLE | CC_MODE_TRIGGER | CC_MODE_OPTIONS | CC_MODE_TAP_TEMPO;
+        actuator_config.supported_modes = CC_MODE_TOGGLE | CC_MODE_TRIGGER | CC_MODE_OPTIONS | CC_MODE_TAP_TEMPO | CC_MODE_MOMENTARY;
         actuator_config.max_assignments = 1;
 
         cc_actuator_t *actuator = cc_actuator_new(&actuator_config);
@@ -510,14 +531,17 @@ int main(void)
             int button_status = hw_button(i);
 
             if (button_status == BUTTON_PRESSED)
-            { 
-
+            {   
+                if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !g_current_assignment[i]->list_bitmask)
+                {
+                    //update leds
+                    hw_led_set(i, LED_G, LED_OFF,0,0); 
+                    hw_led_set(i, LED_W, LED_ON,0,0); 
+                }
                 if (g_tap_tempo[i].state == TT_COUNTING)
                 {
-
                     //handle tap tempo
                     handle_tap_tempo(i);
-
                 }
                 else 
                 {
@@ -526,7 +550,14 @@ int main(void)
             }
             
             else if (button_status == BUTTON_RELEASED)
-            {
+            {   
+                if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !g_current_assignment[i]->list_bitmask)
+                {
+                    //update leds
+                    hw_led_set(i, LED_W, LED_OFF,0,0); 
+                    hw_led_set(i, LED_G, LED_ON,0,0); 
+                }
+                
                 if (g_tap_tempo[i].state != TT_COUNTING)
                 {
                    g_foot_value[i] = 0.0;

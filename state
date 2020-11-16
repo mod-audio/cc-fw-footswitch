@@ -1,0 +1,12 @@
+src/hardware.c:84:            if (button->state == BUTTON_RELEASED)
+src/hardware.c:86:                button->count++;
+src/hardware.c:87:                if (button->count >= BUTTON_DEBOUNCE)
+src/hardware.c:89:                    button->count = 0;
+src/hardware.c:90:                    button->state = BUTTON_PRESSED;
+src/hardware.c:91:                    button->event = BUTTON_PRESSED;
+src/hardware.c:97:            if (button->state == BUTTON_PRESSED)
+src/hardware.c:99:                button->count++;
+src/hardware.c:100:                if (button->count >= BUTTON_DEBOUNCE)
+src/hardware.c:102:                    button->count = 0;
+src/hardware.c:103:                    button->state = BUTTON_RELEASED;
+src/hardware.c:104:                    button->event = BUTTON_RELEASED;
