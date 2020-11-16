@@ -244,9 +244,7 @@ static void update_leds(cc_assignment_t *assignment)
         }
         else
         {  
-
           hw_led_set(assignment->actuator_id, LED_G, LED_ON,0,0);                       
-
         }
         
     }
@@ -484,11 +482,9 @@ int main(void)
     }
     
     for (uint8_t j = 0; j < (FOOTSWITCHES_COUNT); j++)
-    {
-        
+    {   
         g_tap_tempo[j].state = TT_INIT;
     }
-
 
     cc_init(response_cb, events_cb);
     cc_device_t *device = cc_device_new("FootEx", "https://github.com/moddevices/cc-fw-footswitch");
@@ -515,7 +511,6 @@ int main(void)
 
     // init serial
     g_serial = serial_init(CC_BAUD_RATE_FALLBACK, serial_recv);
-
 
 
     while (1)

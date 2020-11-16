@@ -21,7 +21,6 @@
 #define N_LEDS          (sizeof(g_leds_gpio)/sizeof(gpio_t))
 #define N_BACKLIGHTS    (sizeof(g_backlights_gpio)/sizeof(gpio_t))
 
-
 /*
 ****************************************************************************************************
 *       INTERNAL CONSTANTS
@@ -182,7 +181,6 @@ static unsigned int generate_seed(void)
 
     return seed;
 }
-
 
 /*
 ****************************************************************************************************

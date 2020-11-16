@@ -3,7 +3,6 @@
 
 
 #define FOOTSWITCHES_COUNT  4
-#define FOOTSWITCHGROUPS_COUNT 2
 // define firmware version
 #define CC_FIRMWARE_MAJOR   0
 #define CC_FIRMWARE_MINOR   4
