@@ -66,7 +66,7 @@ void hw_led(int led, int color, int value);
 uint32_t hw_uptime(void);
 int hw_self_test(void);
 void hw_led_set(int led, int color, int value, int on_time_ms, int off_time_ms);
-int hw_settings_mode(void);
+
 
 /*
 ****************************************************************************************************

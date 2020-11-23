@@ -16,7 +16,12 @@ CPU = LPC11U24
 CPU_SERIES = LPC11Uxx
 CPU_CORE=cortex-m0
 
+# flags for debugging
+ifeq ($(DEBUG), 1)
+CFLAGS += -O0 -g -DDEBUG
+else
 CFLAGS += -Os
+endif
                                                                                          
 # include directories
 INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc

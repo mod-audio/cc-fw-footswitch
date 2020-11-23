@@ -117,7 +117,7 @@ uint32_t int_to_str(int32_t num, char *string, uint32_t string_size, uint8_t zer
     uint32_t str_len;
 
     if (!string) return 0;
-{
+    {
     // exception case: number is zero
     if (num == 0)
     {
@@ -162,45 +162,5 @@ uint32_t int_to_str(int32_t num, char *string, uint32_t string_size, uint8_t zer
     reverse(string, str_len);
 
     return str_len;
-}
-
-
-    while (1)
-    {
-        // test buttons
-        for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
-        {
-            int button_status = hw_button(i);
-            if (button_status == BUTTON_PRESSED)
-            {
-                //first button means exit (or in the furute next menu item)
-                if (i == 0)
-                {
-                    // ask user to reboot
-                    clcd_cursor_set(0, CLCD_LINE1, 0);
-                    clcd_print(0, "NEW SETTINGS    ");
-                    clcd_cursor_set(0, CLCD_LINE2, 0);
-                    clcd_print(0, "SAVED           ");
-
-                    // ... and test the switches
-                    clcd_cursor_set(1, CLCD_LINE1, 0);
-                    clcd_print(1, "PLEASE REBOOT   ");
-                    clcd_cursor_set(1, CLCD_LINE2, 0);
-                    clcd_print(1, "THE DEVICE      ");
-
-                    //clear prev colors
-                    for (int i = 0; i < 3; ++i)
-                        all_leds(i, LED_OFF);
-
-                    all_leds(LED_G, LED_ON);
-
-                    //lock the device till reboot
-                    while (1); 
-                }
-                
-                
-            }
-        }
-        delay_ms(5);
     }
 }
