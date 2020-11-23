@@ -48,7 +48,7 @@ typedef struct button_t {
 typedef struct blinking_led_t {
     uint8_t state;
     int8_t color[N_LEDS];
-    uint16_t on_time, off_time, time;
+    uint32_t on_time, off_time, time;
 } blinking_led_t;
 
 /*
@@ -58,7 +58,8 @@ typedef struct blinking_led_t {
 */
 
 static button_t g_buttons[N_BUTTONS];
-static uint32_t g_counter, g_self_test;
+static uint32_t g_counter;
+static uint8_t g_self_test;
 static blinking_led_t g_blinking_led[N_LEDS];
 
 /*

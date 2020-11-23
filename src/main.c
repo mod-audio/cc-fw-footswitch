@@ -409,6 +409,7 @@ static void events_cb(void *arg)
                         max = TAP_TEMPO_DEFAULT_TIMEOUT;
                 }
 
+                g_tap_tempo[assignment->actuator_id].time = 0;
                 g_tap_tempo[assignment->actuator_id].max = max;
                 g_tap_tempo[assignment->actuator_id].state = TT_COUNTING;
             }
@@ -437,7 +438,9 @@ static void events_cb(void *arg)
         hw_led_set(actuator_id, LED_G, LED_OFF,0,0);
         hw_led_set(actuator_id, LED_B, LED_OFF,0,0);
 
-        
+        //properly clear all values
+        g_tap_tempo[actuator_id].time = 0;
+        g_tap_tempo[actuator_id].max = 0;
         g_tap_tempo[actuator_id].state = TT_INIT;
     }
 
