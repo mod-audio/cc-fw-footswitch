@@ -231,29 +231,23 @@ static void clear_all(void)
 
 static void update_leds(cc_assignment_t *assignment)
 {
-    if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
-    { 
-        if (assignment->list_bitmask & LIST_MODE_LED_CYCLING)
-        {   
-            uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
-            
-            //turn off previous colour
-            hw_led_set(assignment->actuator_id, (color == 0) ? LED_W : color-1, LED_OFF, 0, 0);
+    if ((assignment->mode & CC_MODE_COLOURED) && (assignment->mode & CC_MODE_OPTIONS))
+    {
+        uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
 
-            hw_led_set(assignment->actuator_id, color, LED_ON, 0, 0);
-        }
-        else
-        {  
-          hw_led_set(assignment->actuator_id, LED_G, LED_ON,0,0);                       
-        }
-        
+        hw_led_set(assignment->actuator_id, (color == 0) ? LED_W : color - 1, LED_OFF, 0, 0);
+        hw_led_set(assignment->actuator_id, color, LED_ON, 0, 0);
+    }
+    else if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
+    {
+        hw_led_set(assignment->actuator_id, LED_G, LED_ON, 0, 0);
     }
     else if (assignment->mode & CC_MODE_TOGGLE)
         hw_led_set(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF,0,0);
-     else if (assignment->mode & CC_MODE_TAP_TEMPO)
+    else if (assignment->mode & CC_MODE_TAP_TEMPO)
         hw_led_set(assignment->actuator_id, LED_G, LED_ON, TAP_TEMPO_TIME_ON,(convert_to_ms(assignment->unit.text, assignment->value) - TAP_TEMPO_TIME_ON));
-        else if (assignment->mode & CC_MODE_MOMENTARY)
-            hw_led_set(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF,0,0);
+    else if (assignment->mode & CC_MODE_MOMENTARY)
+        hw_led_set(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF,0,0);
 }
 
 static void update_lcds(cc_assignment_t *assignment)
@@ -273,7 +267,7 @@ static void update_lcds(cc_assignment_t *assignment)
         buffer[i] = assignment->label.text[i];
 
     // copy item label if it's option mode
-    if (assignment->mode & CC_MODE_OPTIONS)
+    if (assignment->mode & (CC_MODE_OPTIONS | CC_MODE_COLOURED))
     {
         // separator
         buffer[i++] = ':';
@@ -283,7 +277,6 @@ static void update_lcds(cc_assignment_t *assignment)
         for (int j = 0; j < item_label->size && i < sizeof(buffer); j++, i++)
             buffer[i] = item_label->text[j];
     }
-
 else if (assignment->mode & CC_MODE_TAP_TEMPO)
     {
         // separator
@@ -530,7 +523,7 @@ int main(void)
 
             if (button_status == BUTTON_PRESSED)
             {   
-                if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !g_current_assignment[i]->list_bitmask)
+                if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !(g_current_assignment[i]->mode & CC_MODE_COLOURED))
                 {
                     //update leds
                     hw_led_set(i, LED_G, LED_OFF,0,0); 
@@ -548,14 +541,13 @@ int main(void)
             }
             
             else if (button_status == BUTTON_RELEASED)
-            {   
-                if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !g_current_assignment[i]->list_bitmask)
+            {
+                if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !(g_current_assignment[i]->mode & CC_MODE_COLOURED))
                 {
                     //update leds
                     hw_led_set(i, LED_W, LED_OFF,0,0); 
                     hw_led_set(i, LED_G, LED_ON,0,0); 
                 }
-                
                 if (g_tap_tempo[i].state != TT_COUNTING)
                 {
                    g_foot_value[i] = 0.0;

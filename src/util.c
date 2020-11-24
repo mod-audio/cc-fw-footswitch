@@ -65,14 +65,6 @@ static char* reverse(char* str, uint32_t str_len)
 }
 
 
-static void all_leds(int color, int status)
-{
-    for (int i = 0; i < FOOTSWITCHES_COUNT; ++i)
-        hw_led(i, color, status);
-}
-
-
-
 /*
 ****************************************************************************************************
 *       GLOBAL FUNCTIONS
