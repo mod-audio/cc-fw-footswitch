@@ -231,7 +231,7 @@ static void clear_all(void)
 
 static void update_leds(cc_assignment_t *assignment)
 {
-    if ((assignment->mode & CC_MODE_COLOURED) && (assignment->mode & CC_MODE_OPTIONS))
+    if ((assignment->mode & CC_MODE_COLOURED && CC_MODE_OPTIONS))
     {
         uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
 
