@@ -1,4 +1,4 @@
-#ifndef SETTINGS_H
+#ifndef UTILS_H
 #define SETTINGS_H
 
 /*
