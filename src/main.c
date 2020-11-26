@@ -145,7 +145,7 @@ static void handle_tap_tempo(uint8_t actuator_id)
 
     // checks the tap tempo timeout
     if (delta <= g_tap_tempo[actuator_id].max)
-    {   
+    {
         //get current value of tap tempo in ms
         float currentTapVal = convert_to_ms(assignment->unit.text, assignment->value);
         //check if it should be added to running average
@@ -156,7 +156,7 @@ static void handle_tap_tempo(uint8_t actuator_id)
             tmp_tempo = (2*(assignment->value) + convert_from_ms(assignment->unit.text, delta)) / 3;
         }
         else
-        { 
+        {
             // converts and update the tap tempo value
             tmp_tempo = convert_from_ms(assignment->unit.text, delta);
         }
@@ -256,7 +256,7 @@ static void update_lcds(cc_assignment_t *assignment)
     int line = assignment->actuator_id & 0x01;
 
     char buffer[17];
-    int i;
+    uint8_t i;
 
     // init buffer with spaces
     for (i = 0; i < sizeof(buffer) - 1; i++)
@@ -309,7 +309,7 @@ else if (assignment->mode & CC_MODE_TAP_TEMPO)
         for (int j = 0; j < item_label->size && i < sizeof(buffer); j++, i++)
             buffer[i] = item_label->text[j];
     }
-   
+
     // make buffer null-terminated
     buffer[sizeof(buffer) - 1] = 0;
 
@@ -359,7 +359,7 @@ static void events_cb(void *arg)
         }
     }
     else if (event->id == CC_EV_ASSIGNMENT)
-    {   
+    {
         // force cleaning if still on welcome message
         if (g_welcome_timeout > 0)
         {
@@ -476,9 +476,9 @@ int main(void)
     {
         self_test_run();
     }
-    
+
     for (uint8_t j = 0; j < (FOOTSWITCHES_COUNT); j++)
-    {   
+    {
         g_tap_tempo[j].state = TT_INIT;
     }
 
@@ -518,35 +518,35 @@ int main(void)
         }
 
         for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
-        {     
+        {
             int button_status = hw_button(i);
 
             if (button_status == BUTTON_PRESSED)
-            {   
+            {
                 if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !(g_current_assignment[i]->mode & CC_MODE_COLOURED))
                 {
                     //update leds
-                    hw_led_set(i, LED_G, LED_OFF,0,0); 
-                    hw_led_set(i, LED_W, LED_ON,0,0); 
+                    hw_led_set(i, LED_G, LED_OFF,0,0);
+                    hw_led_set(i, LED_W, LED_ON,0,0);
                 }
                 if (g_tap_tempo[i].state == TT_COUNTING)
                 {
                     //handle tap tempo
                     handle_tap_tempo(i);
                 }
-                else 
+                else
                 {
                     g_foot_value[i] = 1.0;
                 }
             }
-            
+
             else if (button_status == BUTTON_RELEASED)
             {
                 if (g_current_assignment[i]->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS) && !(g_current_assignment[i]->mode & CC_MODE_COLOURED))
                 {
                     //update leds
-                    hw_led_set(i, LED_W, LED_OFF,0,0); 
-                    hw_led_set(i, LED_G, LED_ON,0,0); 
+                    hw_led_set(i, LED_W, LED_OFF,0,0);
+                    hw_led_set(i, LED_G, LED_ON,0,0);
                 }
                 if (g_tap_tempo[i].state != TT_COUNTING)
                 {
