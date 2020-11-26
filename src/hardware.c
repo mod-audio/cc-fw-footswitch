@@ -11,7 +11,6 @@
 #include "delay.h"
 #include "clcd.h"
 
-
 /*
 ****************************************************************************************************
 *       INTERNAL MACROS
@@ -22,7 +21,6 @@
 #define N_LEDS          (sizeof(g_leds_gpio)/sizeof(gpio_t))
 #define N_BACKLIGHTS    (sizeof(g_backlights_gpio)/sizeof(gpio_t))
 
-
 /*
 ****************************************************************************************************
 *       INTERNAL CONSTANTS
@@ -32,6 +30,9 @@
 const uint32_t OscRateIn = 12000000;
 const uint32_t ExtRateIn = 0;
 
+static const gpio_t g_buttons_gpio[] = {BUTTONS_PINS};
+static const gpio_t g_leds_gpio[] = {LEDS_PINS};
+static const gpio_t g_backlights_gpio[] = {BACKLIGHTS_PINS};
 
 /*
 ****************************************************************************************************
@@ -44,6 +45,11 @@ typedef struct button_t {
     unsigned int count;
 } button_t;
 
+typedef struct blinking_led_t {
+    uint8_t state;
+    int8_t color[N_LEDS];
+    uint32_t on_time, off_time, time;
+} blinking_led_t;
 
 /*
 ****************************************************************************************************
@@ -51,12 +57,10 @@ typedef struct button_t {
 ****************************************************************************************************
 */
 
-static const gpio_t g_buttons_gpio[] = {BUTTONS_PINS};
-static const gpio_t g_leds_gpio[] = {LEDS_PINS};
-static const gpio_t g_backlights_gpio[] = {BACKLIGHTS_PINS};
 static button_t g_buttons[N_BUTTONS];
-static uint32_t g_counter, g_self_test;
-
+static uint32_t g_counter;
+static uint8_t g_self_test;
+static blinking_led_t g_blinking_led[N_LEDS];
 
 /*
 ****************************************************************************************************
@@ -64,7 +68,7 @@ static uint32_t g_counter, g_self_test;
 ****************************************************************************************************
 */
 
-// buttons process
+// buttons + led proces
 void SysTick_Handler(void)
 {
     g_counter++;
@@ -102,6 +106,49 @@ void SysTick_Handler(void)
             }
         }
     }
+
+    for (int i = 0; i < N_LEDS; i++)
+    {
+        blinking_led_t *led = &g_blinking_led[i];
+
+        if ((led->on_time != 0) && (led->off_time != 0))
+        {
+            //blink get current time
+            if (led->time == 0)
+                led->time = hw_uptime();
+
+            //on or off
+            if ((hw_uptime() - led->time) > led->on_time)
+            {
+                //turn led off
+                if (led->state == LED_ON)
+                {
+                    led->state = LED_OFF;
+                    for (uint8_t j=0; j < 3; j++)
+                    {
+                        if (led->color[j] != -1)
+                            hw_led(i, led->color[j], led->state);
+                    }
+                }
+            }
+
+            if ((hw_uptime() - led->time) > (led->off_time + led->on_time))
+            {
+                //turn led off
+                if (led->state == LED_OFF)
+                {
+                    led->state = LED_ON;
+                    for (uint8_t j=0; j < 3; j++)
+                    {
+                        if (led->color[j] != -1)
+                            hw_led(i, led->color[j], led->state);
+                    }
+                }
+
+                led->time = 0;
+            }
+        } 
+    }
 }
 
 // read unique id via IAP
@@ -135,7 +182,6 @@ static unsigned int generate_seed(void)
 
     return seed;
 }
-
 
 /*
 ****************************************************************************************************
@@ -222,6 +268,72 @@ void hw_led(int led, int color, int value)
     else if (value == LED_TOGGLE)
         Chip_GPIO_SetPinToggle(LPC_GPIO, l->port, l->pin);
 }
+
+void hw_led_set(int led, int color, int value, int on_time_ms, int off_time_ms)
+{
+    int colors[3] = {0, 0, 0};
+
+    if (color == LED_W)
+    {
+        colors[0] = LED_R;
+        colors[1] = LED_G;   
+        colors[2] = LED_B;
+    }
+    else if (color == LED_Y)
+    {
+        colors[0] = LED_R;
+        colors[1] = LED_G;
+        colors[2] = -1;   
+    }
+    else if(color == LED_C)
+    {
+        colors[0] = LED_B;
+        colors[1] = LED_G;
+        colors[2] = -1;   
+    }
+    else if (color == LED_M)
+    {
+        colors[0] = LED_R;
+        colors[1] = LED_B;
+        colors[2] = -1;   
+    }
+    else if (color == LED_R)
+    {
+        colors[0] = LED_R;
+        colors[1] = -1;
+        colors[2] = -1;   
+    }
+    else if (color == LED_G)
+    {
+        colors[0] = -1;
+        colors[1] = -1;
+        colors[2] = LED_G;   
+    }
+    else if (color == LED_B)
+    {
+        colors[0] = -1;
+        colors[1] = LED_B;
+        colors[2] = -1;   
+    }
+
+    for (uint8_t j=0; j < 3; j++)
+    {
+        if (colors[j] != -1)
+            hw_led(led, colors[j], value);
+    }
+
+    //set tap tempo constants
+    g_blinking_led[led].on_time = on_time_ms;
+    g_blinking_led[led].off_time = off_time_ms;
+    g_blinking_led[led].time = 0;
+    g_blinking_led[led].state = value;
+
+    for (uint8_t q = 0; q < 3; q++)
+    {
+        g_blinking_led[led].color[q] = colors[q];
+    }
+}
+
 
 inline uint32_t hw_uptime(void)
 {

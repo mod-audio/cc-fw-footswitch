@@ -20,9 +20,9 @@ CPU_CORE=cortex-m0
 ifeq ($(DEBUG), 1)
 CFLAGS += -O0 -g -DDEBUG
 else
-CFLAGS += -O3
+CFLAGS += -Os
 endif
-
+                                                                                         
 # include directories
 INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc
 
