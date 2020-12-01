@@ -445,9 +445,9 @@ static void events_cb(void *arg)
     }
 
     else if (event->id == CC_CMD_SET_VALUE)
-    {
+    {   
         cc_set_value_t *set_value = event->data;
-        cc_assignment_t *assignment = cc_assignment_get(set_value->actuator_id);
+        cc_assignment_t *assignment = cc_assignment_get(set_value->assignment_id);
         assignment->value = set_value->value;
         update_leds(assignment);
         update_lcds(assignment);
