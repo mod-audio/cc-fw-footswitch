@@ -435,6 +435,9 @@ static void events_cb(void *arg)
         g_tap_tempo[actuator_id].time = 0;
         g_tap_tempo[actuator_id].max = 0;
         g_tap_tempo[actuator_id].state = TT_INIT;
+
+        //clear assignment mode
+        g_current_assignment[actuator_id]->mode = CC_MODE_MOMENTARY;
     }
 
     else if (event->id == CC_EV_UPDATE)
