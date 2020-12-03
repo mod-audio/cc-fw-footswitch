@@ -445,12 +445,27 @@ static void events_cb(void *arg)
     }
 
     else if (event->id == CC_CMD_SET_VALUE)
-    {   
+    {
         cc_set_value_t *set_value = event->data;
         cc_assignment_t *assignment = cc_assignment_get(set_value->assignment_id);
-        assignment->value = set_value->value;
-        update_leds(assignment);
-        update_lcds(assignment);
+
+        if (assignment->mode & CC_MODE_OPTIONS)
+        {
+            assignment->list_index = set_value->value;
+
+            hw_led_set(assignment->actuator_id, LED_R, LED_OFF, 0, 0);
+            hw_led_set(assignment->actuator_id, LED_G, LED_OFF, 0, 0);
+            hw_led_set(assignment->actuator_id, LED_B, LED_OFF, 0, 0);
+
+            update_leds(assignment);
+            update_lcds(assignment);
+        }
+        else
+        {
+            assignment->value = set_value->value;
+            update_leds(assignment);
+            update_lcds(assignment);
+        }
     }
 
     else if (event->id == CC_EV_MASTER_RESETED)
