@@ -231,9 +231,9 @@ static void clear_all(void)
 
 static void update_leds(cc_assignment_t *assignment)
 {
-    if ((assignment->mode & CC_MODE_COLOURED && CC_MODE_OPTIONS))
+    if ((assignment->mode & CC_MODE_COLOURED && assignment->mode & CC_MODE_OPTIONS))
     {
-         hw_led_set(assignment->actuator_id, LED_R, LED_OFF, 0, 0);
+        hw_led_set(assignment->actuator_id, LED_R, LED_OFF, 0, 0);
         hw_led_set(assignment->actuator_id, LED_G, LED_OFF, 0, 0);
         hw_led_set(assignment->actuator_id, LED_B, LED_OFF, 0, 0);
         
