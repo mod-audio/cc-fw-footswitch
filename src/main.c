@@ -238,8 +238,6 @@ static void update_leds(cc_assignment_t *assignment)
         hw_led_set(assignment->actuator_id, LED_B, LED_OFF, 0, 0);
         
         uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
-
-        hw_led_set(assignment->actuator_id, (color == 0) ? LED_W : color - 1, LED_OFF, 0, 0);
         hw_led_set(assignment->actuator_id, color, LED_ON, 0, 0);
     }
     else if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
@@ -431,17 +429,14 @@ static void events_cb(void *arg)
         waiting_message(actuator_id);
 
         // turn off leds
-        hw_led_set(actuator_id, LED_R, LED_OFF,0,0);
-        hw_led_set(actuator_id, LED_G, LED_OFF,0,0);
-        hw_led_set(actuator_id, LED_B, LED_OFF,0,0);
-
+        hw_led_set(actuator_id, LED_W, LED_OFF, 0, 0);
         //properly clear all values
         g_tap_tempo[actuator_id].time = 0;
         g_tap_tempo[actuator_id].max = 0;
         g_tap_tempo[actuator_id].state = TT_INIT;
 
         //clear assignment mode
-        g_current_assignment[actuator_id]->mode = CC_MODE_MOMENTARY;
+        g_current_assignment[actuator_id]->mode = 0;
     }
 
     else if (event->id == CC_EV_UPDATE)
@@ -457,17 +452,11 @@ static void events_cb(void *arg)
         cc_assignment_t *assignment = cc_assignment_get(set_value->assignment_id);
 
         if (assignment->mode & CC_MODE_OPTIONS)
-        {
-            assignment->list_index = set_value->value;
-            update_leds(assignment);
-            update_lcds(assignment);
-        }
-        else
-        {
-            assignment->value = set_value->value;
-            update_leds(assignment);
-            update_lcds(assignment);
-        }
+        assignment->list_index = set_value->value;
+        
+        assignment->value = set_value->value;
+        update_leds(assignment);
+        update_lcds(assignment);
     }
 
     else if (event->id == CC_EV_MASTER_RESETED)
