@@ -210,9 +210,7 @@ static void turn_off_leds(void)
 {
     for (int i = 0; i < FOOTSWITCHES_COUNT; i++)
     {
-        hw_led_set(i, LED_R, LED_OFF,0,0);
-        hw_led_set(i, LED_G, LED_OFF,0,0);
-        hw_led_set(i, LED_B, LED_OFF,0,0);
+        hw_led_set(i, LED_W, LED_OFF, 0, 0);
     }
 }
 
@@ -430,6 +428,7 @@ static void events_cb(void *arg)
 
         // turn off leds
         hw_led_set(actuator_id, LED_W, LED_OFF, 0, 0);
+
         //properly clear all values
         g_tap_tempo[actuator_id].time = 0;
         g_tap_tempo[actuator_id].max = 0;
@@ -452,7 +451,7 @@ static void events_cb(void *arg)
         cc_assignment_t *assignment = cc_assignment_get(set_value->assignment_id);
 
         if (assignment->mode & CC_MODE_OPTIONS)
-        assignment->list_index = set_value->value;
+            assignment->list_index = set_value->value;
         
         assignment->value = set_value->value;
         update_leds(assignment);
