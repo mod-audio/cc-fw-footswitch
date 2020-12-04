@@ -233,13 +233,17 @@ static void update_leds(cc_assignment_t *assignment)
 {
     if ((assignment->mode & CC_MODE_COLOURED && CC_MODE_OPTIONS))
     {
+         hw_led_set(assignment->actuator_id, LED_R, LED_OFF, 0, 0);
+        hw_led_set(assignment->actuator_id, LED_G, LED_OFF, 0, 0);
+        hw_led_set(assignment->actuator_id, LED_B, LED_OFF, 0, 0);
+        
         uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
 
         hw_led_set(assignment->actuator_id, (color == 0) ? LED_W : color - 1, LED_OFF, 0, 0);
         hw_led_set(assignment->actuator_id, color, LED_ON, 0, 0);
     }
     else if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
-    {
+    {   
         hw_led_set(assignment->actuator_id, LED_G, LED_ON, 0, 0);
     }
     else if (assignment->mode & CC_MODE_TOGGLE)
@@ -455,11 +459,6 @@ static void events_cb(void *arg)
         if (assignment->mode & CC_MODE_OPTIONS)
         {
             assignment->list_index = set_value->value;
-
-            hw_led_set(assignment->actuator_id, LED_R, LED_OFF, 0, 0);
-            hw_led_set(assignment->actuator_id, LED_G, LED_OFF, 0, 0);
-            hw_led_set(assignment->actuator_id, LED_B, LED_OFF, 0, 0);
-
             update_leds(assignment);
             update_lcds(assignment);
         }
