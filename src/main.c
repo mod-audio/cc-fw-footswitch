@@ -133,7 +133,7 @@ static void handle_tap_tempo(uint8_t actuator_id)
     uint32_t delta = now - g_tap_tempo[actuator_id].time;
     g_tap_tempo[actuator_id].time = now;
 
-    cc_assignment_t *assignment = cc_assignment_get(actuator_id);
+    cc_assignment_t *assignment = g_current_assignment[actuator_id];
 
     // checks if delta almost suits maximum allowed value
     if ((delta > g_tap_tempo[actuator_id ].max) &&
@@ -365,11 +365,8 @@ static void events_cb(void *arg)
             clear_all();
         }
 
-        int *act_id = event->data;
-        int actuator_id = *act_id;
-
-        cc_assignment_t *assignment = cc_assignment_get(actuator_id);
-        g_current_assignment[actuator_id] = assignment;
+        cc_assignment_t *assignment = event->data;
+        g_current_assignment[assignment->actuator_id] = assignment;
 
         if (assignment->mode & CC_MODE_TAP_TEMPO)
         {
@@ -446,7 +443,7 @@ static void events_cb(void *arg)
     else if (event->id == CC_CMD_SET_VALUE)
     {
         cc_set_value_t *set_value = event->data;
-        cc_assignment_t *assignment = cc_assignment_get(set_value->assignment_id);
+        cc_assignment_t *assignment = g_current_assignment[set_value->actuator_id];
 
         if (assignment->mode & CC_MODE_OPTIONS)
             assignment->list_index = set_value->value;
