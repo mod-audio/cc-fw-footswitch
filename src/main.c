@@ -229,19 +229,17 @@ static void clear_all(void)
 
 static void update_leds(cc_assignment_t *assignment)
 {
-    if ((assignment->mode & CC_MODE_COLOURED && assignment->mode & CC_MODE_OPTIONS))
+    if ((assignment->mode & CC_MODE_COLOURED) && (assignment->mode & CC_MODE_OPTIONS))
     {
         hw_led_set(assignment->actuator_id, LED_R, LED_OFF, 0, 0);
         hw_led_set(assignment->actuator_id, LED_G, LED_OFF, 0, 0);
         hw_led_set(assignment->actuator_id, LED_B, LED_OFF, 0, 0);
-        
-        uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
+
+        const uint8_t color = (assignment->list_index % LED_COLOURS_AMOUNT);
         hw_led_set(assignment->actuator_id, color, LED_ON, 0, 0);
     }
-    else if (assignment->mode & (CC_MODE_TRIGGER | CC_MODE_OPTIONS))
-    {   
+    else if ((assignment->mode & CC_MODE_TRIGGER) || (assignment->mode & CC_MODE_OPTIONS))
         hw_led_set(assignment->actuator_id, LED_G, LED_ON, 0, 0);
-    }
     else if (assignment->mode & CC_MODE_TOGGLE)
         hw_led_set(assignment->actuator_id, LED_R, assignment->value ? LED_ON : LED_OFF,0,0);
     else if (assignment->mode & CC_MODE_TAP_TEMPO)
@@ -277,7 +275,7 @@ static void update_lcds(cc_assignment_t *assignment)
         for (int j = 0; j < item_label->size && i < sizeof(buffer); j++, i++)
             buffer[i] = item_label->text[j];
     }
-else if (assignment->mode & CC_MODE_TAP_TEMPO)
+    else if (assignment->mode & CC_MODE_TAP_TEMPO)
     {
         // separator
         buffer[i++] = ':';
@@ -452,7 +450,7 @@ static void events_cb(void *arg)
 
         if (assignment->mode & CC_MODE_OPTIONS)
             assignment->list_index = set_value->value;
-        
+
         assignment->value = set_value->value;
         update_leds(assignment);
         update_lcds(assignment);

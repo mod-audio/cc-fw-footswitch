@@ -22,7 +22,7 @@ CFLAGS += -O0 -g -DDEBUG
 else
 CFLAGS += -Os
 endif
-                                                                                         
+
 # include directories
 INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc
 
