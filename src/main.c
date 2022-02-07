@@ -50,7 +50,7 @@ struct TAP_TEMPO_T {
 
 static serial_t *g_serial;
 static float g_foot_value[FOOTSWITCHES_COUNT];
-static unsigned int g_welcome_timeout = 1000000;
+static unsigned int g_welcome_timeout = 200000;
 static struct TAP_TEMPO_T g_tap_tempo[FOOTSWITCHES_COUNT];
 static cc_assignment_t *g_current_assignment[FOOTSWITCHES_COUNT];
 
