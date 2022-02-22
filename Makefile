@@ -16,12 +16,7 @@ CPU = LPC11U24
 CPU_SERIES = LPC11Uxx
 CPU_CORE=cortex-m0
 
-# flags for debugging
-ifeq ($(DEBUG), 1)
-CFLAGS += -O0 -g -DDEBUG
-else
-CFLAGS += -Os
-endif
+CFLAGS += -Os -fsingle-precision-constant -s -ffast-math -fdelete-null-pointer-checks -flto
 
 # include directories
 INC = -I$(SRC_DIR) -I$(SRC_DIR)/cpu/$(CPU_SERIES) -I$(SRC_DIR)/cc
@@ -50,7 +45,7 @@ LDFLAGS += -Xlinker --gc-sections
 ifeq ($(CCC_ANALYZER_OUTPUT_FORMAT),)
 LDFLAGS += -T $(LINKER_FILE) -Xlinker -Map=$(MAP_FILE)
 LDFLAGS += $(CPU_FLAGS) -specs=nano.specs
-LDFLAGS += -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group
+LDFLAGS += -Wl,--start-group -Wl,--gc-sections -lgcc -lc -lm -lrdimon -Wl,--end-group -Wl,--print-memory-usage
 else
 LDFLAGS += -lc -lm -m32
 endif

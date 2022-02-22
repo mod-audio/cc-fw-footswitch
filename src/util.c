@@ -6,11 +6,7 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "hardware.h"
-#include "clcd.h"
-#include "control_chain.h"
 #include "chip.h"
-#include "config.h"
 #include "util.h"
 
 
@@ -71,7 +67,7 @@ static char* reverse(char* str, uint32_t str_len)
 ****************************************************************************************************
 */
 
-uint32_t float_to_str(float num, char *string, uint32_t string_size, uint8_t precision)
+int float_to_str(float num, char *string, int string_size, uint8_t precision)
 {
     int p = 1;
     int i = 0;
@@ -102,7 +98,7 @@ uint32_t float_to_str(float num, char *string, uint32_t string_size, uint8_t pre
     return len;
 }
 
-uint32_t int_to_str(int32_t num, char *string, uint32_t string_size, uint8_t zero_leading, uint8_t need_minus)
+int int_to_str(int num, char *string, int string_size, uint8_t zero_leading, uint8_t need_minus)
 {
     char *pstr = string;
     uint8_t signal = 0;

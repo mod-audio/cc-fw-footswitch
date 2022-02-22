@@ -16,7 +16,9 @@
 // maximum number of assignments that can be created per actuator
 #define CC_MAX_ASSIGNMENTS      1
 // maximum number of options items that can be created per device
-#define CC_MAX_OPTIONS_ITEMS    64
+#define CC_MAX_OPTIONS_ITEMS    15
+//amount of actuator groups
+#define CC_MAX_ACTUATORGROUPS  2
 
 //// Tap Tempo
 // defines the time that the led will stay turned on (in milliseconds)
@@ -31,7 +33,24 @@
 //amount of colours available for LED cycling
 #define LED_COLOURS_AMOUNT		7
 
+//frame size needs to be an uneven number, otherwise the master will round it
+#define CC_OPTIONS_LIST_FRAME_SIZE  3
+
 // define the size of the queue used to store the updates before send them
 #define CC_UPDATES_FIFO_SIZE    10
+
+
+//ID's for saving settings
+#define EEPROM_VERSION_ID	0
+#define PAGE_SETTING_ID 	1
+#define CC_CHAIN_ID_ID  	2
+
+#define DEFAULT_PAGES		3
+#define DEFAULT_DEVICE_ID	0
+
+#define MAX_PAGES			3
+
+#define EEPROM_ID			1
+
 
 #endif

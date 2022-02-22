@@ -59,7 +59,7 @@ typedef struct blinking_led_t {
 
 static button_t g_buttons[N_BUTTONS];
 static uint32_t g_counter;
-static uint8_t g_self_test;
+static uint8_t g_boot_mode = BOOT_CONTROLCHAIN;
 static blinking_led_t g_blinking_led[N_LEDS];
 
 /*
@@ -189,7 +189,7 @@ static unsigned int generate_seed(void)
 ****************************************************************************************************
 */
 
-void hw_init(void)
+int hw_init(void)
 {
     Chip_SystemInit();
     SystemCoreClockUpdate();
@@ -245,8 +245,14 @@ void hw_init(void)
 
     // check if should start in self-test mode
     int foot3 = hw_button(2), foot4 = hw_button(3);
-    if (foot3 == BUTTON_PRESSED && foot4 == BUTTON_PRESSED)
-        g_self_test = 1;
+    if (foot4 == BUTTON_PRESSED) {
+        if (foot3 == BUTTON_PRESSED)
+            g_boot_mode = BOOT_SELFTEST;
+        else
+            g_boot_mode = BOOT_SETTINGS;
+    }
+
+    return g_boot_mode;
 }
 
 int hw_button(int button)
@@ -273,47 +279,49 @@ void hw_led_set(int led, int color, int value, int on_time_ms, int off_time_ms)
 {
     int colors[3] = {0, 0, 0};
 
-    if (color == LED_W)
+    switch (color)
     {
-        colors[0] = LED_R;
-        colors[1] = LED_G;
-        colors[2] = LED_B;
-    }
-    else if (color == LED_Y)
-    {
-        colors[0] = LED_R;
-        colors[1] = LED_G;
-        colors[2] = -1;
-    }
-    else if(color == LED_C)
-    {
-        colors[0] = LED_B;
-        colors[1] = LED_G;
-        colors[2] = -1;
-    }
-    else if (color == LED_M)
-    {
-        colors[0] = LED_R;
-        colors[1] = LED_B;
-        colors[2] = -1;
-    }
-    else if (color == LED_R)
-    {
-        colors[0] = LED_R;
-        colors[1] = -1;
-        colors[2] = -1;
-    }
-    else if (color == LED_G)
-    {
-        colors[0] = -1;
-        colors[1] = -1;
-        colors[2] = LED_G;
-    }
-    else if (color == LED_B)
-    {
-        colors[0] = -1;
-        colors[1] = LED_B;
-        colors[2] = -1;
+        case LED_W:
+            colors[0] = LED_R;
+            colors[1] = LED_G;
+            colors[2] = LED_B;
+        break;
+
+        case LED_Y:
+            colors[0] = LED_R;
+            colors[1] = LED_G;
+            colors[2] = -1;
+        break;
+
+        case LED_C:
+            colors[0] = LED_B;
+            colors[1] = LED_G;
+            colors[2] = -1;
+        break;
+
+        case LED_M:
+            colors[0] = LED_R;
+            colors[1] = LED_B;
+            colors[2] = -1;
+        break;
+
+        case LED_R:
+            colors[0] = LED_R;
+            colors[1] = -1;
+            colors[2] = -1;
+        break;
+
+        case LED_G:
+            colors[0] = -1;
+            colors[1] = -1;
+            colors[2] = LED_G;
+        break;
+
+        case LED_B:
+            colors[0] = -1;
+            colors[1] = LED_B;
+            colors[2] = -1;
+        break;
     }
 
     for (uint8_t j=0; j < 3; j++)
@@ -334,13 +342,7 @@ void hw_led_set(int led, int color, int value, int on_time_ms, int off_time_ms)
     }
 }
 
-
 inline uint32_t hw_uptime(void)
 {
     return g_counter;
-}
-
-inline int hw_self_test(void)
-{
-    return g_self_test;
 }

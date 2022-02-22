@@ -50,12 +50,6 @@ static serial_t *g_serial;
 ****************************************************************************************************
 */
 
-static void all_leds(int color, int status)
-{
-    for (int i = 0; i < FOOTSWITCHES_COUNT; ++i)
-        hw_led_set(i, color, status,0,0);
-}
-
 static void serial_recv(void *arg)
 {
     static char buffer[24];
@@ -102,22 +96,6 @@ static void serial_recv(void *arg)
 void self_test_run(void)
 {
     g_serial = serial_init(CC_BAUD_RATE, serial_recv);
-    delay_ms(2000);
-
-    // test red leds
-    all_leds(LED_R, LED_ON);
-    delay_ms(1000);
-    all_leds(LED_R, LED_OFF);
-
-    // test green leds
-    all_leds(LED_G, LED_ON);
-    delay_ms(1000);
-    all_leds(LED_G, LED_OFF);
-
-    // test blue leds
-    all_leds(LED_B, LED_ON);
-    delay_ms(1000);
-    all_leds(LED_B, LED_OFF);
 
     // clear displays
     clcd_clear(0);
@@ -125,15 +103,15 @@ void self_test_run(void)
 
     // ask user to connect cable...
     clcd_cursor_set(0, CLCD_LINE1, 0);
-    clcd_print(0, "PLUG CROSSOVER  ");
+    clcd_print(0, "SELFTEST: PLUG  ");
     clcd_cursor_set(0, CLCD_LINE2, 0);
-    clcd_print(0, "PATCH CABLE     ");
+    clcd_print(0, "CROSSOVER CABLE ");
 
     // ... and test the switches
     clcd_cursor_set(1, CLCD_LINE1, 0);
     clcd_print(1, "PRESS DOWN ALL  ");
     clcd_cursor_set(1, CLCD_LINE2, 0);
-    clcd_print(1, "FOOTSWITCHES    ");
+    clcd_print(1, "FOOTSWITCHES 4x ");
 
     static int state[FOOTSWITCHES_COUNT];
     static serial_data_t msg;
