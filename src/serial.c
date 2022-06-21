@@ -137,3 +137,8 @@ void serial_baud_rate_set(uint32_t baud_rate)
 {
     Chip_UART_SetBaud(LPC_USART, baud_rate);
 }
+
+void serial_flush(serial_t *serial)
+{
+    RingBuffer_Flush(&serial->rx_rb);
+}

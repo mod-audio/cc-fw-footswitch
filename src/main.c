@@ -110,7 +110,6 @@ static void print_page_number(void)
 
 static void handle_tap_tempo(uint8_t actuator_id)
 {
-
     uint32_t now = hw_uptime();
     uint32_t delta = now - g_tap_tempo[actuator_id].time;
     g_tap_tempo[actuator_id].time = now;
@@ -377,10 +376,7 @@ static void update_lcds(cc_assignment_t *assignment)
 static void serial_recv(void *arg)
 {
     cc_data_t *data = arg;
-
-    // use regular baud rate option if parse failed many times
-    if (cc_parse(data) < 0)
-        serial_baud_rate_set(CC_BAUD_RATE);
+    cc_parse(data);
 }
 
 static void response_cb(void *arg)
@@ -462,6 +458,8 @@ static void events_cb(void *arg)
 
         update_leds(assignment);
         update_lcds(assignment);
+
+        serial_flush(g_serial);
     }
 
     else if (event->id == CC_EV_UNASSIGNMENT)
@@ -540,10 +538,9 @@ int main(void)
     welcome_message(alt_boot_modes);
 
     // execute self-test if required
-    //if (alt_boot_modes == BOOT_SELFTEST)
-    //    self_test_run();
-    //else
-    if (alt_boot_modes == BOOT_SETTINGS)
+    if (alt_boot_modes == BOOT_SELFTEST)
+        self_test_run();
+    else if (alt_boot_modes == BOOT_SETTINGS)
         settings_screen_run();
 
     int chain_id = setting_get(CC_CHAIN_ID_ID);
@@ -627,6 +624,8 @@ int main(void)
                     else
                         g_current_page = 1;
 
+                    clear_all();
+
                     hw_led_set(i, LED_W, LED_OFF, 0, 0);
                     //keep colors in sync with Dwarf/DuoX pages
                     switch (g_current_page) {
@@ -647,6 +646,9 @@ int main(void)
 
                     //send CC command to request now actuators
                     cc_request_page(g_current_page);
+
+                    //make sure we dont switch pages too fast for this device
+                    delay_ms(100);
                 }
                 else
                 {

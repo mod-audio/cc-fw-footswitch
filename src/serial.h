@@ -50,7 +50,7 @@ typedef struct serial_data_t {
 serial_t *serial_init(uint32_t baud_rate, void (*receive_cb)(void *arg));
 void serial_send(serial_t *serial, serial_data_t *sdata);
 void serial_baud_rate_set(uint32_t baud_rate);
-
+void serial_flush(serial_t *serial);
 
 /*
 ****************************************************************************************************
