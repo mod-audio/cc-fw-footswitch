@@ -544,7 +544,18 @@ int main(void)
         settings_screen_run();
 
     int chain_id = setting_get(CC_CHAIN_ID_ID);
+
+    if ((chain_id < 0) || (chain_id > 8)) {
+        chain_id = 1;
+        setting_set(CC_CHAIN_ID_ID, chain_id);
+    }
+
     g_pages_amount = setting_get(PAGE_SETTING_ID);
+
+    if ((g_pages_amount < 0) || (g_pages_amount > 3)) {
+        g_pages_amount = 1;
+        setting_set(PAGE_SETTING_ID, g_pages_amount);
+    }
 
     for (uint8_t j = 0; j < (FOOTSWITCHES_COUNT); j++)
     {

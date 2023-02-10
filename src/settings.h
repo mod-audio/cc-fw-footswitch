@@ -35,6 +35,7 @@
 */
 
 int setting_get(uint8_t setting_id);
+void setting_set(uint8_t setting_id, uint32_t value);
 void settings_screen_run(void);
 
 /*

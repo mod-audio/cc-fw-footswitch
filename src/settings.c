@@ -83,16 +83,6 @@ void read_eeprom(char target_addr, char *result_addr)
     iap_entry( IAP_command, IAP_result );
 }
 
-void setting_set(uint8_t setting_id, uint32_t value)
-{
-    char MSG_BFR[6];
-    
-    int_to_str(value, MSG_BFR, sizeof(MSG_BFR), 1, 0);
-
-    write_eeprom(MSG_BFR, setting_id);
-}
-
-
 void write_screen_settings(int pages, int chainID)
 {
     char value_str_bfr[6];
@@ -123,6 +113,15 @@ int setting_get(uint8_t setting_id)
     read_eeprom(setting_id, MSG_BFR);
 
     return atoi(MSG_BFR);
+}
+
+void setting_set(uint8_t setting_id, uint32_t value)
+{
+    char MSG_BFR[6];
+    
+    int_to_str(value, MSG_BFR, sizeof(MSG_BFR), 1, 0);
+
+    write_eeprom(MSG_BFR, setting_id);
 }
 
 void settings_screen_run(void)
