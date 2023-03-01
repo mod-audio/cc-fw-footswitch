@@ -170,8 +170,12 @@ static void waiting_message(int foot)
         else
             text[6] = '1' + foot;
 
+        uint8_t char_cursor = 0;
+        if ((foot == 1) || (foot == 3))
+            char_cursor = 9;
+
         // print message
-        clcd_cursor_set(lcd, line, 0);
+        clcd_cursor_set(lcd, line, char_cursor);
         clcd_print(lcd, text);
     }
 }
@@ -206,13 +210,21 @@ static void lcd_group_widget(cc_assignment_t *assignment)
     char buffer[17];
     uint8_t i = 0;
 
+    // upper part
+
     // init buffer with spaces
     for (i = 0; i < sizeof(buffer) - 1; i++)
         buffer[i] = ' ';
 
+    if (assignment->label.size < 16) {
+        i = (16 - assignment->label.size) / 2;
+    }
+    else
+        i = 0;
+
     // copy assignment label
-    for (i = 0; i < assignment->label.size; i++)
-        buffer[i] = assignment->label.text[i];
+    for (int char_index = 0; i < assignment->label.size; i++, char_index++)
+        buffer[i] = assignment->label.text[char_index];
 
     // make buffer null-terminated
     buffer[sizeof(buffer) - 1] = 0;
@@ -221,19 +233,25 @@ static void lcd_group_widget(cc_assignment_t *assignment)
     clcd_cursor_set(lcd, 0, 0);
     clcd_print(lcd, buffer);
 
+    // lower part
     // init buffer with spaces
     for (i = 0; i < sizeof(buffer) - 1; i++)
         buffer[i] = ' ';
 
+    // copy item label
+    str16_t *item_label = &assignment->list_items[assignment->list_index]->label;
+
+    uint8_t start_char = 0;
+    uint8_t list_string_size = item_label->size + 4;
+    if (list_string_size < 16) {
+        start_char = 16 - list_string_size;
+    }
+
     i = 0;
     buffer[i] = '-';
 
-    i = 2;
-
-    // copy item label
-    str16_t *item_label = &assignment->list_items[assignment->list_index]->label;
-    for (uint8_t j = 0; j < item_label->size && i < (sizeof(buffer)-3); j++, i++)
-        buffer[i] = item_label->text[j];
+    for (uint8_t j = 0; j < item_label->size && start_char < (sizeof(buffer)-3); j++, start_char++)
+        buffer[start_char] = item_label->text[j];
 
     buffer[15] = '+';
 
@@ -317,52 +335,77 @@ static void update_lcds(cc_assignment_t *assignment)
     for (i = 0; i < sizeof(buffer) - 1; i++)
         buffer[i] = ' ';
 
-    // copy assignment label
-    for (i = 0; i < assignment->label.size; i++)
-        buffer[i] = assignment->label.text[i];
-
     // copy item label if it's option mode
     if (assignment->mode & (CC_MODE_OPTIONS | CC_MODE_COLOURED))
     {
+        // copy item label
+        str16_t *item_label = &assignment->list_items[assignment->list_index]->label;
+
+        int total_string_size = assignment->label.size + item_label->size + 1;
+
+        if ((total_string_size < 16) && ((id == 1) || (id == 3))) {
+            i = 16 - total_string_size;
+        }
+        else
+            i = 0;
+
+        // copy assignment label
+        for (int char_index = 0; char_index < assignment->label.size; i++, char_index++)
+            buffer[i] = assignment->label.text[char_index];
+
         // separator
         buffer[i++] = ':';
 
-        // copy item label
-        str16_t *item_label = &assignment->list_items[assignment->list_index]->label;
         for (int j = 0; j < item_label->size && i < sizeof(buffer); j++, i++)
             buffer[i] = item_label->text[j];
     }
     else if (assignment->mode & CC_MODE_TAP_TEMPO)
     {
-        // separator
-        buffer[i++] = ':';
-        buffer[i++] = ' ';
+        char value_label[6];
+        uint8_t value_size = 0;
 
         //print as int of float
         //s with 2 decimals
         if (strcmp(assignment->unit.text, "s") == 0 || strcmp(assignment->unit.text, "hz") == 0)
-        {
-            // copy value to label
-            char value_label[6];
-            uint8_t value_size = float_to_str(assignment->value, value_label, sizeof(value_label),2);
-            for (int j = 0; j < value_size && i < sizeof(buffer); j++, i++)
-                buffer[i] = value_label[j];
-        }
+            value_size = float_to_str(assignment->value, value_label, sizeof(value_label),2);
         //bpm and ms as int
         else
-        {
-            // copy value to label
-            char value_label[6];
-            uint8_t value_size = int_to_str(assignment->value, value_label, sizeof(value_label),0,0);
-            for (int j = 0; j < value_size && i < sizeof(buffer); j++, i++)
-                buffer[i] = value_label[j];
-        }
-        buffer[i++] = ' ';
+            value_size = int_to_str(assignment->value, value_label, sizeof(value_label),0,0);
+
+        str16_t *assignment_unit = &assignment->unit;
+
+        int total_string_size = assignment->label.size + value_size + assignment_unit->size + 1;
+
+        if ((total_string_size < 16) && ((id == 1) || (id == 3)))
+            i = 16 - total_string_size;
+        else
+            i = 0;
+
+        // copy assignment label
+        for (int char_index = 0; char_index < assignment->label.size; i++, char_index++)
+            buffer[i] = assignment->label.text[char_index];
+
+        // separator
+        buffer[i++] = ':';
+
+        //copy value
+        for (int j = 0; j < value_size && i < sizeof(buffer); j++, i++)
+            buffer[i] = value_label[j];
 
         // copy unit label
-        str16_t *item_label = &assignment->unit;
-        for (int j = 0; j < item_label->size && i < sizeof(buffer); j++, i++)
-            buffer[i] = item_label->text[j];
+        for (int j = 0; j < assignment_unit->size && i < sizeof(buffer); j++, i++)
+            buffer[i] = assignment_unit->text[j];
+    }
+    else
+    {
+        if ((assignment->label.size < 16) && ((id == 1) || (id == 3)))
+            i = 16 - assignment->label.size;
+        else
+            i = 0;
+
+        // copy assignment label
+        for (int char_index = 0; char_index < assignment->label.size; i++, char_index++)
+            buffer[i] = assignment->label.text[char_index];
     }
 
     // make buffer null-terminated
